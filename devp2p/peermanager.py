@@ -173,6 +173,8 @@ class PeerManager(WiredService):
                 kademlia_proto.find_node(nodeid)  # fixme, should be a task
                 gevent.sleep(self.discovery_delay)  # wait for results
                 neighbours = kademlia_proto.routing.neighbours(nodeid, 1)
+                if not neighbours:
+                    continue
                 node = neighbours[0]
                 log.info('connecting random', node=node)
                 local_pubkey = crypto.privtopub(self.config['node']['privkey_hex'].decode('hex'))
