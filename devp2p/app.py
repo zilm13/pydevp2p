@@ -88,7 +88,7 @@ node:
     # stop on every unhandled exception!
     gevent.get_hub().SYSTEM_ERROR = BaseException  # (KeyboardInterrupt, SystemExit, SystemError)
 
-    print config
+    print(config)
     # create app
     app = BaseApp(config)
 

@@ -37,16 +37,16 @@ def test_chunked():
     mux.add_protocol(p2)
 
     # big packet
-    print 'size', mux.max_window_size * 2
+    print('size', mux.max_window_size * 2)
     packet1 = Packet(p1, cmd_id=0, payload='\x00' * mux.max_window_size * 2 + 'x')
     mux.add_packet(packet1)
     frames = mux.pop_all_frames()
     all_frames_length = sum(f.frame_size() for f in frames)
     assert sum(len(f.payload) for f in frames) == len(packet1.payload)
     for i, f, in enumerate(frames):
-        print i, f.frame_size()
-        print 'frame payload', len(f.payload)
-        print f._frame_type()
+        print(i, f.frame_size())
+        print('frame payload', len(f.payload))
+        print(f._frame_type())
     mux.add_packet(packet1)
     message = mux.pop_all_frames_as_bytes()
     assert len(message) == all_frames_length
@@ -65,18 +65,18 @@ def test_chunked_big():
 
     # big packet
     payload = '\x00' * 10 * 1024**2
-    print 'size', len(payload)
+    print('size', len(payload))
     packet1 = Packet(p0, cmd_id=0, payload=payload)
 
     # framing
     st = time.time()
     mux.add_packet(packet1)
-    print 'framing', time.time() - st
+    print('framing', time.time() - st)
 
     # popping frames
     st = time.time()
     messages = [f.as_bytes() for f in mux.pop_all_frames()]
-    print 'popping frames', time.time() - st
+    print('popping frames', time.time() - st)
 
     st = time.time()
     # decoding
@@ -84,7 +84,7 @@ def test_chunked_big():
         packets = mux.decode(m)
         if packets:
             break
-    print 'decoding frames', time.time() - st
+    print('decoding frames', time.time() - st)
     assert len(mux._decode_buffer) == 0
     assert packets[0].payload == packet1.payload
     assert packets[0] == packet1

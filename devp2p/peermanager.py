@@ -223,9 +223,9 @@ class PeerErrors(PeerErrorsBase):
 
         def report():
             for k, v in self.errors.items():
-                print k, self.client_versions.get(k, '')
+                print(k, self.client_versions.get(k, ''))
                 for e in v:
-                    print '\t', e
+                    print('\t', e)
 
         atexit.register(report)
 

@@ -72,7 +72,7 @@ def cstr(num, txt):
     return '%s%s%s' % (colors[num % len(colors)], txt, COLOR_END)
 
 def cprint(num, txt):
-    print cstr(num, txt)
+    print(cstr(num, txt))
 
 def phx(x):
     return x.encode('hex')[:8]

@@ -253,14 +253,14 @@ def test_bootstrap_udp():
     assert boot_node.address
 
     for app in apps[1:]:
-        print 'test bootstrap from=%s to=%s' % (this_node(app), boot_node)
+        print('test bootstrap from=%s to=%s' % (this_node(app), boot_node))
         kproto(app).bootstrap([boot_node])
         gevent.sleep(sleep_delay)
 
     gevent.sleep(sleep_delay * 2)
 
     for app in apps[1:]:
-        print 'test find_node from=%s' % (this_node(app))
+        print('test find_node from=%s' % (this_node(app)))
         kproto(app).find_node(this_node(app).id)
         gevent.sleep(sleep_delay)
 
@@ -272,7 +272,7 @@ def test_bootstrap_udp():
     # now all nodes should know each other
     for i, app in enumerate(apps):
         num = len(kproto(app).routing)
-        print num
+        print(num)
         if i < len(apps) / 2:  # only the first half has enough time to get all updates
             assert num >= num_apps - 1
 
@@ -287,10 +287,10 @@ def main():
     # app.config['p2p']['listen_host'] = '127.0.0.1'
     app.config['p2p']['listen_host'] = '0.0.0.0'
 
-    print "this node is"
+    print("this node is")
     proto = app.services.discovery.protocol.kademlia
     this_node = proto.this_node
-    print this_node.pubkey.encode('hex')
+    print(this_node.pubkey.encode('hex'))
 
     # add external node
 
@@ -309,15 +309,15 @@ def main():
     node_uri = cpp_bootstrap
 
     r_node = discovery.Node.from_uri(node_uri)
-    print "remote node is", r_node
+    print("remote node is", r_node)
     # add node to the routing table
 
-    print "START & TEST BOOTSTRAP"
+    print("START & TEST BOOTSTRAP")
     app.config['p2p']['bootstrap_nodes'] = [node_uri]
     app.start()
 
     gevent.sleep(2.)
-    print "TEST FIND_NODE"
+    print("TEST FIND_NODE")
     for i in range(10):
         nodeid = kademlia.random_nodeid()
         assert isinstance(nodeid, type(this_node.id))
@@ -327,20 +327,20 @@ def main():
     pinged = lambda: set(n for t, n, r in proto._expected_pongs.values())
 
     for i in range(10):
-        print 'num nodes', len(proto.routing)
+        print('num nodes', len(proto.routing))
         gevent.sleep(1)
         # proto.find_node(this_node.id)
         # for node in proto.routing:
         proto.ping(r_node)
         # proto.find_node(this_node.id)
 
-    print 'nodes in routing'
+    print('nodes in routing')
     for node in proto.routing:
-        print node.to_uri()
-    print 'nodes we are waiting for pongs'
+        print(node.to_uri())
+    print('nodes we are waiting for pongs')
 
     for node in pinged():
-        print node.to_uri()
+        print(node.to_uri())
 
 
 if __name__ == '__main__':

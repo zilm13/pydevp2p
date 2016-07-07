@@ -99,7 +99,7 @@ class BaseProtocol(gevent.Greenlet):
             try:
                 data = rlp.decode(str(rlp_data), sedes=decoder)
             except (AssertionError, rlp.RLPException, TypeError) as e:
-                print repr(rlp.decode(rlp_data))
+                print(repr(rlp.decode(rlp_data)))
                 raise e
             if isinstance(cls.structure, sedes.CountableList):
                 return data

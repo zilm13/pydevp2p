@@ -73,7 +73,7 @@ def test_big_transfer():
     st = time.time()
 
     def cb(proto, **data):
-        print 'took', time.time() - st, len(data['raw_data'])
+        print('took', time.time() - st, len(data['raw_data']))
 
     b_protocol.receive_transfer_callbacks.append(cb)
     raw_data = '0' * 1 * 1000 * 100

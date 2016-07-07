@@ -148,7 +148,7 @@ def test_handshake():
 
     header_sedes = sedes.List([sedes.big_endian_int, sedes.big_endian_int])
     header_data = rlp.decode(header[3:], strict=False, sedes=header_sedes)
-    print 'header', repr(header_data)
+    print('header', repr(header_data))
 
     # frame
     frame = r['frame']
@@ -156,7 +156,7 @@ def test_handshake():
     # normal: rlp(packet-type) [|| rlp(packet-data)] || padding
     packet_type, end = consume_item(frame, start=0)
     packet_type = rlp.decode(frame, sedes=sedes.big_endian_int, strict=False)
-    print 'packet_type', repr(packet_type)
+    print('packet_type', repr(packet_type))
 
     # decode hello body
     _sedes_capabilites_tuple = sedes.List([sedes.binary, sedes.big_endian_int])
@@ -172,4 +172,4 @@ def test_handshake():
     hello_sedes = sedes.List([x[1] for x in structure])
     frame_data = rlp.decode(frame[end:], sedes=hello_sedes)
     frame_data = dict((structure[i][0], x) for i, x in enumerate(frame_data))
-    print 'frame', frame_data
+    print('frame', frame_data)

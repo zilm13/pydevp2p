@@ -30,7 +30,7 @@ class PeerMock(object):
         self.remote_hello_version = version
 
     def send_packet(self, packet):
-        print 'sending', packet
+        print('sending', packet)
         self.packets.append(packet)
 
     def stop(self):
