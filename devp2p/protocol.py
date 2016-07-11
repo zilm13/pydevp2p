@@ -1,8 +1,8 @@
 import gevent
 import rlp
 from rlp import sedes
-from multiplexer import Packet
-from service import WiredService
+from .multiplexer import Packet
+from .service import WiredService
 import slogging
 log = slogging.get_logger('protocol')
 
@@ -97,7 +97,7 @@ class BaseProtocol(gevent.Greenlet):
             else:
                 decoder = sedes.List([x[1] for x in cls.structure], strict=cls.decode_strict)
             try:
-                data = rlp.decode(str(rlp_data), sedes=decoder)
+                data = rlp.decode(rlp_data, sedes=decoder)
             except (AssertionError, rlp.RLPException, TypeError) as e:
                 print(repr(rlp.decode(rlp_data)))
                 raise e
@@ -109,7 +109,7 @@ class BaseProtocol(gevent.Greenlet):
         # end command base ###################################################
 
     def __init__(self, peer, service):
-        "hint: implement peer_started notifcation of associated protocol here"
+        "hint: implement peer_started notification of associated protocol here"
         assert isinstance(service, WiredService)
         assert callable(peer.send_packet)
         self.is_stopped = False
