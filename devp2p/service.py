@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from gevent import Greenlet
-import utils
+from devp2p import utils
 
 
 class BaseService(Greenlet):

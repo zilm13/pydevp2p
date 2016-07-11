@@ -9,7 +9,7 @@ import rlp
 from rlp.utils import decode_hex, is_integer, str_to_bytes, safe_ord
 from gevent.server import DatagramServer
 
-import slogging
+from devp2p import slogging
 from devp2p import crypto
 from devp2p import kademlia
 from devp2p import utils

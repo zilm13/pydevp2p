@@ -19,7 +19,7 @@ import random
 import time
 from functools import total_ordering
 
-import slogging
+from devp2p import slogging
 from crypto import sha3
 from utils import big_endian_to_int
 from rlp.utils import encode_hex, is_integer, str_to_bytes
