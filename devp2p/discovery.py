@@ -223,7 +223,7 @@ class DiscoveryProtocol(kademlia.WireInterface):
     def get_node(self, nodeid, address=None):
         "return node or create new, update address if supplied"
         assert isinstance(nodeid, bytes)
-        assert len(nodeid) == 512 / 8
+        assert len(nodeid) == 512 // 8
         assert address or (nodeid in self.nodes)
         if nodeid not in self.nodes:
             self.nodes[nodeid] = Node(nodeid, address)
