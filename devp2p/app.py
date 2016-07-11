@@ -1,8 +1,12 @@
-from UserDict import IterableUserDict
-from service import BaseService
-from slogging import get_logger
+try:
+    from UserDict import IterableUserDict
+except ImportError:
+    from collections import UserDict as IterableUserDict
+from .service import BaseService
+from .slogging import get_logger
 import utils
 import crypto
+from rlp.utils import decode_hex
 from devp2p import __version__
 log = get_logger('app')
 
@@ -78,7 +82,7 @@ node:
     """
     if len(sys.argv) == 1:
         config = yaml.load(io.BytesIO(sample_config))
-        pubkey = crypto.privtopub(config['node']['privkey_hex'].decode('hex'))
+        pubkey = crypto.privtopub(decode_hex(config['node']['privkey_hex']))
         config['node']['id'] = crypto.sha3(pubkey)
     else:
         fn = sys.argv[1]
