@@ -1,9 +1,10 @@
 import devp2p.crypto as crypto
+from rlp.utils import decode_hex
 
 
 def test_ecies_enc():
     bob = crypto.ECCx()
-    msg = 'test yeah'
+    msg = b'test yeah'
     ciphertext = crypto.ECCx.ecies_encrypt(msg, bob.raw_pubkey)
     _dec = bob.ecies_decrypt(ciphertext)
     assert _dec == msg
@@ -12,12 +13,12 @@ def test_ecies_enc():
 # tests from cpp client ##############################################
 
 def fromHex(x):
-    return x[2:].decode('hex')
+    return decode_hex(x[2:])
 
 
 def test_sha256():
     emptyExpected = fromHex("0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
-    empty = ''
+    empty = b''
     emptyTestOut = crypto.sha256(empty).digest()
     assert(emptyExpected == emptyTestOut)
 
@@ -70,7 +71,7 @@ def test_decrypt():
     kmK = fromHex("0x57baf2c62005ddec64c357d96183ebc90bf9100583280e848aa31d683cad73cb")
     kmCipher = fromHex(
         "0x04ff2c874d0a47917c84eea0b2a4141ca95233720b5c70f81a8415bae1dc7b746b61df7558811c1d6054333907333ef9bb0cc2fbf8b34abb9730d14e0140f4553f4b15d705120af46cf653a1dc5b95b312cf8444714f95a4f7a0425b67fc064d18f4d0a528761565ca02d97faffdac23de10")
-    kmExpected = "a"
+    kmExpected = b"a"
     kmPlain = crypto.ECCx(raw_privkey=kmK).ecies_decrypt(kmCipher)
     assert(kmExpected == kmPlain)
 
@@ -88,7 +89,7 @@ def test_decrypt1():
     cipher1 = fromHex(
         "0x046f647e1bd8a5cd1446d31513bac233e18bdc28ec0e59d46de453137a72599533f1e97c98154343420d5f16e171e5107999a7c7f1a6e26f57bcb0d2280655d08fb148d36f1d4b28642d3bb4a136f0e33e3dd2e3cffe4b45a03fb7c5b5ea5e65617250fdc89e1a315563c20504b9d3a72555")
 
-    expectedPlain1 = "a"
+    expectedPlain1 = b"a"
     plainTest1 = crypto.ECCx(raw_privkey=kenc).ecies_decrypt(cipher1)
     assert(expectedPlain1 == plainTest1)
 
@@ -97,7 +98,7 @@ def test_decrypt2():
     kenc, penc = test_privtopub()
     cipher2 = fromHex(
         "0x0443c24d6ccef3ad095140760bb143078b3880557a06392f17c5e368502d79532bc18903d59ced4bbe858e870610ab0d5f8b7963dd5c9c4cf81128d10efd7c7aa80091563c273e996578403694673581829e25a865191bdc9954db14285b56eb0043b6288172e0d003c10f42fe413222e273d1d4340c38a2d8344d7aadcbc846ee")
-    expectedPlain2 = "aaaaaaaaaaaaaaaa"
+    expectedPlain2 = b"aaaaaaaaaaaaaaaa"
     plainTest2 = crypto.ECCx(raw_privkey=kenc).ecies_decrypt(cipher2)
     assert(expectedPlain2 == plainTest2)
 
@@ -106,6 +107,6 @@ def test_decrypt3():
     kenc, penc = test_privtopub()
     cipher3 = fromHex(
         "0x04c4e40c86bb5324e017e598c6d48c19362ae527af8ab21b077284a4656c8735e62d73fb3d740acefbec30ca4c024739a1fcdff69ecaf03301eebf156eb5f17cca6f9d7a7e214a1f3f6e34d1ee0ec00ce0ef7d2b242fbfec0f276e17941f9f1bfbe26de10a15a6fac3cda039904ddd1d7e06e7b96b4878f61860e47f0b84c8ceb64f6a900ff23844f4359ae49b44154980a626d3c73226c19e")
-    expectedPlain3 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    expectedPlain3 = b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     plainTest3 = crypto.ECCx(raw_privkey=kenc).ecies_decrypt(cipher3)
     assert(expectedPlain3 == plainTest3)

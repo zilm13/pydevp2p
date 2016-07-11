@@ -4,6 +4,7 @@
 
 from devp2p.rlpxcipher import RLPxSession
 from devp2p.crypto import ECCx, privtopub
+from rlp.utils import decode_hex
 test_values = \
     {
         "initiator_private_key": "5e173f6ac3c669587538e7727cf19b782a4f2fda07c1eaa662c593e5e85e3051",
@@ -27,7 +28,7 @@ test_values = \
     }
 
 for k, v in test_values.items():
-    test_values[k] = v.decode('hex')
+    test_values[k] = decode_hex(v)
 
 
 keys = ['initiator_private_key',
@@ -144,7 +145,7 @@ def test_handshake():
     from rlp.codec import consume_item
 
     header = r['header']
-    frame_length = struct.unpack('>I', '\x00' + header[:3])[0]
+    frame_length = struct.unpack(b'>I', b'\x00' + header[:3])[0]
 
     header_sedes = sedes.List([sedes.big_endian_int, sedes.big_endian_int])
     header_data = rlp.decode(header[3:], strict=False, sedes=header_sedes)

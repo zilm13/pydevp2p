@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from devp2p import crypto
+from rlp.utils import decode_hex
 import random
 import pytest
 
@@ -23,7 +24,7 @@ def test_asymetric():
     bob = get_ecc('secret2')
 
     # enc / dec
-    plaintext = "Hello Bob"
+    plaintext = b"Hello Bob"
     ciphertext = crypto.encrypt(plaintext, bob.raw_pubkey)
     assert bob.decrypt(ciphertext) == plaintext
 
@@ -57,12 +58,10 @@ def test_recover():
 
 
 def test_get_ecdh_key():
-    privkey = "332143e9629eedff7d142d741f896258f5a1bfab54dab2121d3ec5000093d74b".decode('hex')
-    remote_pubkey = "f0d2b97981bd0d415a843b5dfe8ab77a30300daab3658c578f2340308a2da1a07f0821367332598b6aa4e180a41e92f4ebbae3518da847f0b1c0bbfe20bcf4e1".decode(
-        'hex')
+    privkey = decode_hex("332143e9629eedff7d142d741f896258f5a1bfab54dab2121d3ec5000093d74b")
+    remote_pubkey = decode_hex("f0d2b97981bd0d415a843b5dfe8ab77a30300daab3658c578f2340308a2da1a07f0821367332598b6aa4e180a41e92f4ebbae3518da847f0b1c0bbfe20bcf4e1")
 
-    agree_expected = "ee1418607c2fcfb57fda40380e885a707f49000a5dda056d828b7d9bd1f29a08".decode(
-        'hex')
+    agree_expected = decode_hex("ee1418607c2fcfb57fda40380e885a707f49000a5dda056d828b7d9bd1f29a08")
 
     e = crypto.ECCx(raw_privkey=privkey)
     agree = e.get_ecdh_key(remote_pubkey)
@@ -72,7 +71,7 @@ def test_get_ecdh_key():
 def test_en_decrypt():
     alice = crypto.ECCx()
     bob = crypto.ECCx()
-    msg = 'test'
+    msg = b'test'
     ciphertext = alice.encrypt(msg, bob.raw_pubkey)
     assert bob.decrypt(ciphertext) == msg
 
@@ -80,14 +79,14 @@ def test_en_decrypt():
 def test_en_decrypt_shared_mac_data():
     alice, bob = crypto.ECCx(), crypto.ECCx()
     ciphertext = alice.encrypt('test', bob.raw_pubkey, shared_mac_data='shared mac data')
-    assert bob.decrypt(ciphertext, shared_mac_data='shared mac data') == 'test'
+    assert bob.decrypt(ciphertext, shared_mac_data=b'shared mac data') == b'test'
 
 
 @pytest.mark.xfail(raises=crypto.ECIESDecryptionError)
 def test_en_decrypt_shared_mac_data_fail():
     alice, bob = crypto.ECCx(), crypto.ECCx()
     ciphertext = alice.encrypt('test', bob.raw_pubkey, shared_mac_data='shared mac data')
-    bob.decrypt(ciphertext, shared_mac_data='wrong')
+    bob.decrypt(ciphertext, shared_mac_data=b'wrong')
 
 
 def test_privtopub():
