@@ -20,12 +20,12 @@ def test_session():
     proto = P2PProtocol(peer=PeerMock(), service=WiredService(BaseApp()))
     hello_packet = proto.create_hello()
 
-    responder_privkey = mk_privkey('secret1')
+    responder_privkey = mk_privkey(b'secret1')
     responder = MultiplexedSession(responder_privkey, hello_packet=hello_packet)
     p0 = 0
     responder.add_protocol(p0)
 
-    initiator_privkey = mk_privkey('secret2')
+    initiator_privkey = mk_privkey(b'secret2')
     initiator = MultiplexedSession(initiator_privkey, hello_packet=hello_packet,
                                    remote_pubkey=privtopub(responder_privkey))
     initiator.add_protocol(p0)

@@ -7,7 +7,7 @@ def test_frame():
     mux.add_protocol(p0)
 
     # test normal packet
-    packet0 = Packet(p0, cmd_id=0, payload='x' * 100)
+    packet0 = Packet(p0, cmd_id=0, payload=b'x' * 100)
     mux.add_packet(packet0)
     frames = mux.pop_frames()
     assert len(frames) == 1
@@ -38,7 +38,7 @@ def test_chunked():
 
     # big packet
     print('size', mux.max_window_size * 2)
-    packet1 = Packet(p1, cmd_id=0, payload='\x00' * mux.max_window_size * 2 + 'x')
+    packet1 = Packet(p1, cmd_id=0, payload=b'\x00' * mux.max_window_size * 2 + b'x')
     mux.add_packet(packet1)
     frames = mux.pop_all_frames()
     all_frames_length = sum(f.frame_size() for f in frames)
@@ -64,7 +64,7 @@ def test_chunked_big():
     mux.add_protocol(p0)
 
     # big packet
-    payload = '\x00' * 10 * 1024**2
+    payload = b'\x00' * 10 * 1024**2
     print('size', len(payload))
     packet1 = Packet(p0, cmd_id=0, payload=payload)
 
@@ -99,7 +99,7 @@ def test_remain():
     mux.add_protocol(p2)
 
     # test buffer remains, incomplete frames
-    packet1 = Packet(p1, cmd_id=0, payload='\x00' * 100)
+    packet1 = Packet(p1, cmd_id=0, payload=b'\x00' * 100)
     mux.add_packet(packet1)
     message = mux.pop_all_frames_as_bytes()
     tail = message[:50]
@@ -135,7 +135,7 @@ def test_multiplexer():
     assert mux.num_active_protocols == 0
 
     # test normal packet
-    packet0 = Packet(p0, cmd_id=0, payload='x' * 100)
+    packet0 = Packet(p0, cmd_id=0, payload=b'x' * 100)
 
     mux.add_packet(packet0)
     assert mux.num_active_protocols == 1
@@ -157,7 +157,7 @@ def test_multiplexer():
     assert len(mux.pop_frames()) == 0
 
     # big packet
-    packet1 = Packet(p1, cmd_id=0, payload='\x00' * mux.max_window_size * 2)
+    packet1 = Packet(p1, cmd_id=0, payload=b'\x00' * mux.max_window_size * 2)
     mux.add_packet(packet1)
 
     # decode packets from buffer
@@ -168,7 +168,7 @@ def test_multiplexer():
     assert len(packets) == 1
 
     # mix packet types
-    packet2 = Packet(p0, cmd_id=0, payload='\x00' * 200, prioritize=True)
+    packet2 = Packet(p0, cmd_id=0, payload=b'\x00' * 200, prioritize=True)
     mux.add_packet(packet1)
     mux.add_packet(packet0)
     mux.add_packet(packet2)
@@ -177,7 +177,7 @@ def test_multiplexer():
     assert packets == [packet2, packet0, packet1]
 
     # packets with different protocols
-    packet3 = Packet(p1, cmd_id=0, payload='\x00' * 3000, prioritize=False)
+    packet3 = Packet(p1, cmd_id=0, payload=b'\x00' * 3000, prioritize=False)
     mux.add_packet(packet1)
     mux.add_packet(packet0)
     mux.add_packet(packet2)
@@ -191,7 +191,7 @@ def test_multiplexer():
     assert packets == [packet3, packet2, packet0, packet3, packet3, packet1]
 
     # test buffer remains, incomplete frames
-    packet1 = Packet(p1, cmd_id=0, payload='\x00' * 100)
+    packet1 = Packet(p1, cmd_id=0, payload=b'\x00' * 100)
     mux.add_packet(packet1)
     message = mux.pop_all_frames_as_bytes()
     tail = message[:50]
