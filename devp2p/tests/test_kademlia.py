@@ -153,9 +153,8 @@ def show_buckets():
     routing = routing_table(10000)
     for i, b in enumerate(routing.buckets):
         d = b.depth
-        print('  ' * d)
-        print('bucket:%d, num nodes:%d depth:%d' % \
-            (i, len(b), kademlia.k_id_size - int(math.log(b.start ^ routing.this_node.id, 2))))
+        print('%sbucket:%d, num nodes:%d depth:%d' % \
+            (' ' * d, i, len(b), kademlia.k_id_size - int(math.log(b.start ^ routing.this_node.id, 2))))
     print('routing.node is in bucket', \
         routing.buckets.index(routing.bucket_by_node(routing.this_node)))
 
