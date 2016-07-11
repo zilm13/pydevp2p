@@ -64,7 +64,7 @@ class WireMock(kademlia.WireInterface):
 
 def random_pubkey():
     pk = int_to_big_endian(random.getrandbits(kademlia.k_pubkey_size))
-    return '\x00' * (kademlia.k_pubkey_size / 8 - len(pk)) + pk
+    return b'\x00' * (kademlia.k_pubkey_size // 8 - len(pk)) + pk
 
 
 def random_node():
@@ -252,7 +252,7 @@ def test_eviction_node_active():
     assert msg[0] == 'ping'
     assert msg[1] == proto.this_node
     assert len(proto._expected_pongs) == 1
-    expected_pingid = proto._expected_pongs.keys()[0]
+    expected_pingid = tuple(proto._expected_pongs.keys())[0]
     assert len(expected_pingid) == 96
     echo = expected_pingid[:32]
     assert len(echo) == 32

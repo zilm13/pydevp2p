@@ -1,6 +1,7 @@
 from devp2p import peermanager
 from devp2p import crypto
 from devp2p.app import BaseApp
+from rlp.utils import encode_hex
 import devp2p.muxsession
 import rlp
 import devp2p.p2p_protocol
@@ -20,7 +21,7 @@ def test_app_restart():
     host, port = '127.0.0.1', 3020
 
     a_config = dict(p2p=dict(listen_host=host, listen_port=port),
-                    node=dict(privkey_hex=crypto.sha3('a').encode('hex')))
+                    node=dict(privkey_hex=encode_hex(crypto.sha3(b'a'))))
 
     a_app = BaseApp(a_config)
     peermanager.PeerManager.register_with_app(a_app)

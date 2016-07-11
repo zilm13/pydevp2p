@@ -10,7 +10,7 @@ random.seed(42)
 
 def random_pubkey():
     pk = int_to_big_endian(random.getrandbits(kademlia.k_pubkey_size))
-    return '\x00' * (kademlia.k_pubkey_size / 8 - len(pk)) + pk
+    return b'\x00' * (kademlia.k_pubkey_size // 8 - len(pk)) + pk
 
 
 def random_node():
