@@ -25,7 +25,8 @@ if 'pyelliptic' not in dir() or not CIPHERNAMES.issubset(set(pyelliptic.Cipher.g
 
 import bitcoin
 from Crypto.Hash import keccak
-sha3_256 = lambda x: keccak.new(digest_bits=256, data=x)
+from rlp.utils import str_to_bytes, safe_ord, ascii_chr
+sha3_256 = lambda x: keccak.new(digest_bits=256, data=str_to_bytes(x))
 from hashlib import sha256
 import struct
 from secp256k1 import PrivateKey, PublicKey, ALL_FLAGS
@@ -146,10 +147,10 @@ class ECCx(pyelliptic.ECC):
         assert len(ciphertext) == len(data)
 
         # 4) send 0x04 || R || AsymmetricEncrypt(shared-secret, plaintext) || tag
-        msg = chr(0x04) + ephem_pubkey + iv + ciphertext
+        msg = ascii_chr(0x04) + ephem_pubkey + iv + ciphertext
 
         # the MAC of a message (called the tag) as per SEC 1, 3.5.
-        tag = hmac_sha256(key_mac, msg[1 + 64:] + shared_mac_data)
+        tag = hmac_sha256(key_mac, msg[1 + 64:] + str_to_bytes(shared_mac_data))
         assert len(tag) == 32
         msg += tag
 
@@ -157,7 +158,7 @@ class ECCx(pyelliptic.ECC):
         assert len(msg) - cls.ecies_encrypt_overhead_length == len(data)
         return msg
 
-    def ecies_decrypt(self, data, shared_mac_data=''):
+    def ecies_decrypt(self, data, shared_mac_data=b''):
         """
         Decrypt data with ECIES method using the local private key
 
@@ -170,7 +171,7 @@ class ECCx(pyelliptic.ECC):
         [where R = r*G, and recipientPublic = recipientPrivate*G]
 
         """
-        if data[0] != chr(0x04):
+        if data[:1] != b'\x04':
             raise ECIESDecryptionError("wrong ecies header")
 
         #  1) generate shared-secret = kdf( ecdhAgree(myPrivKey, msg[1:65]) )
@@ -227,19 +228,19 @@ def _encode_sig(v, r, s):
 
 
 def _decode_sig(sig):
-    return ord(sig[64]) + 27, bitcoin.decode(sig[0:32], 256), bitcoin.decode(sig[32:64], 256)
+    return safe_ord(sig[64]) + 27, bitcoin.decode(sig[0:32], 256), bitcoin.decode(sig[32:64], 256)
 
 
 def ecdsa_verify(pubkey, signature, message):
     assert len(signature) == 65
     assert len(pubkey) == 64
-    pk = PublicKey('\04' + pubkey, raw=True)
+    pk = PublicKey(b'\04' + pubkey, raw=True)
     return pk.ecdsa_verify(
         message,
         pk.ecdsa_recoverable_convert(
             pk.ecdsa_recoverable_deserialize(
                 signature[:64],
-                ord(signature[64]))),
+                safe_ord(signature[64]))),
         raw=True
     )
 verify = ecdsa_verify
@@ -251,7 +252,7 @@ def ecdsa_sign(msghash, privkey):
     signature = pk.ecdsa_recoverable_serialize(
         pk.ecdsa_sign_recoverable(
             msghash, raw=True))
-    new = signature[0] + chr(signature[1])
+    new = signature[0] + ascii_chr(signature[1])
     return new
 
 sign = ecdsa_sign
@@ -264,7 +265,7 @@ def ecdsa_recover(message, signature):
         message,
         pk.ecdsa_recoverable_deserialize(
             signature[:64],
-            ord(signature[64])),
+            safe_ord(signature[64])),
         raw=True
     )
     return pk.serialize(compressed=False)[1:]
@@ -302,8 +303,8 @@ def eciesKDF(key_material, key_len):
 
     NIST SP 800-56a Concatenation Key Derivation Function (see section 5.8.1).
     """
-    s1 = ""
-    key = ""
+    s1 = b""
+    key = b""
     hash_blocksize = 64
     reps = ((key_len + 7) * 8) / (hash_blocksize * 8)
     counter = 0
