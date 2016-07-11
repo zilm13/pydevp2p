@@ -1,8 +1,8 @@
 import time
 import gevent
 from rlp import sedes
-from multiplexer import Packet
-from protocol import BaseProtocol
+from .multiplexer import Packet
+from .protocol import BaseProtocol
 import slogging
 import collections
 
