@@ -73,6 +73,9 @@ class Node(object):
     def __ne__(self, other):
         return not self == other
 
+    def __hash__(self):
+        return hash(self.pubkey)
+
     def __repr__(self):
         return '<Node(%s)>' % encode_hex(self.pubkey[:4])
 
