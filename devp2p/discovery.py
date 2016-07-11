@@ -37,6 +37,9 @@ class PacketExpired(DefectiveMessage):
 enc_port = lambda p: utils.ienc4(p)[-2:]
 dec_port = utils.idec
 
+import sys
+PY3 = sys.version_info[0] >= 3
+
 
 class Address(object):
 
@@ -63,7 +66,7 @@ class Address(object):
             # We only want v4 or v6 addresses
             # see https://docs.python.org/2/library/socket.html#socket.getaddrinfo
             ips = [
-                unicode(ai[4][0])
+                str(ai[4][0]) if PY3 else unicode(ai[4][0])
                 for ai in gevent.socket.getaddrinfo(ip, None)
                 if ai[0] == AF_INET
                     or (ai[0] == AF_INET6 and ai[4][3] == 0)
