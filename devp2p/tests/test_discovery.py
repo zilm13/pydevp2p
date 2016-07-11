@@ -188,7 +188,7 @@ eip8_packets = dict(
 def test_eip8_packets():
     disc = NodeDiscoveryMock(host='127.0.0.1', port=1, seed='bob').protocol
     fromaddr = discovery.Address("127.0.0.1", 9999)
-    for packet in eip8_packets.itervalues():
+    for packet in eip8_packets.values():
         disc.unpack(packet)
 
 # ############ test with real UDP ##################
