@@ -7,10 +7,10 @@ from .p2p_protocol import P2PProtocol
 from .service import WiredService
 from .multiplexer import MultiplexerError, Packet
 from .muxsession import MultiplexedSession
-from crypto import ECIESDecryptionError
-import slogging
+from .crypto import ECIESDecryptionError
+from devp2p import slogging
 import gevent.socket
-import rlpxcipher
+from devp2p import rlpxcipher
 from rlp.utils import decode_hex
 
 log = slogging.get_logger('p2p.peer')

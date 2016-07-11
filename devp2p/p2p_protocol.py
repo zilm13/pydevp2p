@@ -3,7 +3,7 @@ import gevent
 from rlp import sedes
 from .multiplexer import Packet
 from .protocol import BaseProtocol
-import slogging
+from devp2p import slogging
 import collections
 
 

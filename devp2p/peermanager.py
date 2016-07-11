@@ -8,13 +8,13 @@ from gevent.socket import create_connection, timeout
 from .service import WiredService
 from .protocol import BaseProtocol
 from .p2p_protocol import P2PProtocol
-import kademlia
+from devp2p import kademlia
 from .peer import Peer
-import crypto
-import utils
+from devp2p import crypto
+from devp2p import utils
 from rlp.utils import decode_hex
 
-import slogging
+from devp2p import slogging
 log = slogging.get_logger('p2p.peermgr')
 
 

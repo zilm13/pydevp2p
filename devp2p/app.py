@@ -4,8 +4,8 @@ except ImportError:
     from collections import UserDict as IterableUserDict
 from .service import BaseService
 from .slogging import get_logger
-import utils
-import crypto
+from devp2p import utils
+from devp2p import crypto
 from rlp.utils import decode_hex
 from devp2p import __version__
 log = get_logger('app')
@@ -56,10 +56,10 @@ def main():
     import sys
     import signal
     import gevent
-    from peermanager import PeerManager
-    from jsonrpc import JSONRPCServer
-    from discovery import NodeDiscovery
-    import slogging
+    from .peermanager import PeerManager
+    from .jsonrpc import JSONRPCServer
+    from .discovery import NodeDiscovery
+    from devp2p import slogging
     log = slogging.get_logger('app')
     slogging.configure(config_string=':debug')
 

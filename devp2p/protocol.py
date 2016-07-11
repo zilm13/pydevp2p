@@ -3,7 +3,7 @@ import rlp
 from rlp import sedes
 from .multiplexer import Packet
 from .service import WiredService
-import slogging
+from devp2p import slogging
 log = slogging.get_logger('protocol')
 
 
