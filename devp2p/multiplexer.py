@@ -323,7 +323,7 @@ class Multiplexer(object):
 
     @property
     def next_protocol(self):
-        protocols = self.queues.keys()
+        protocols = tuple(self.queues.keys())
         if self.last_protocol == protocols[-1]:
             next_protocol = protocols[0]
         else:
@@ -396,7 +396,7 @@ class Multiplexer(object):
         """
         returns the frames for the next protocol up to protocol window size bytes
         """
-        protocols = self.queues.keys()
+        protocols = tuple(self.queues.keys())
         idx = protocols.index(self.next_protocol)
         protocols = protocols[idx:] + protocols[:idx]
         assert len(protocols) == len(self.queues.keys())
