@@ -69,8 +69,7 @@ class RLPxSession(object):
             return self.aes_enc.update(data)
 
         def mac(data=b''):
-            if not isinstance(data, bytes):
-                data = bytes(data, 'utf-8')
+            data = str_to_bytes(data)
             self.egress_mac.update(data)
             return self.egress_mac.digest()
 
