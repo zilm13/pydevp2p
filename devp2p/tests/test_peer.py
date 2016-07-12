@@ -50,10 +50,6 @@ def test_handshake():
     b_app.stop()
 
 
-@pytest.mark.skipif(platform.python_implementation() == "PyPy" or
-                    (platform.python_implementation() == "CPython" and \
-                     platform.sys.version_info[0] >= 3),
-                    reason="Unkown failure on PyPy / CPython3. See ethereum/pydevp2p#37")
 def test_big_transfer():
 
     class transfer(devp2p.p2p_protocol.BaseProtocol.command):
@@ -93,8 +89,6 @@ def test_big_transfer():
     gevent.sleep(0.1)
 
 
-@pytest.mark.xfail(platform.python_implementation() == "PyPy",
-                   reason="Unkown failure on PyPy. See ethereum/pydevp2p#37")
 def test_dumb_peer():
     """ monkeypatch receive_hello to make peer not to mark that hello was received.
     no hello in defined timeframe makes peer to stop """
