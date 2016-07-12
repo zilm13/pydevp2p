@@ -1,6 +1,6 @@
 import struct
 import rlp
-from rlp.utils import encode_hex, decode_hex
+from rlp.utils import encode_hex, decode_hex, str_to_bytes
 import collections
 
 ienc = int_to_big_endian = rlp.sedes.big_endian_int.serialize
@@ -19,21 +19,21 @@ def int_to_big_endian4(integer):
 ienc4 = int_to_big_endian4
 
 
-node_uri_scheme = 'enode://'
+node_uri_scheme = b'enode://'
 
 
 def host_port_pubkey_from_uri(uri):
-    assert uri.startswith(node_uri_scheme) and '@' in uri and ':' in uri, uri
-    pubkey_hex, ip_port = uri[len(node_uri_scheme):].split('@')
-    assert len(pubkey_hex) == 2 * 512 / 8
-    ip, port = ip_port.split(':')
+    assert uri.startswith(node_uri_scheme) and b'@' in uri and b':' in uri, uri
+    pubkey_hex, ip_port = uri[len(node_uri_scheme):].split(b'@')
+    assert len(pubkey_hex) == 2 * 512 // 8
+    ip, port = ip_port.split(b':')
     return ip, port, decode_hex(pubkey_hex)
 
 
 def host_port_pubkey_to_uri(host, port, pubkey):
-    assert len(pubkey) == 512 / 8
-    return '%s%s@%s:%d' % (node_uri_scheme, encode_hex(pubkey),
-                           host, port)
+    assert len(pubkey) == 512 // 8
+    return b'%s%s@%s:%d' % (node_uri_scheme, encode_hex(pubkey),
+                           str_to_bytes(host), port)
 
 
 # ###### config helpers ###############

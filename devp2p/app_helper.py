@@ -80,7 +80,7 @@ def run(app_class, service_class, num_nodes=3, seed=0, min_peers=2, max_peers=2,
     # get bootstrap node (node0) enode
     bootstrap_node_privkey = mk_privkey('%d:udp:%d' % (seed, 0))
     bootstrap_node_pubkey = privtopub_raw(bootstrap_node_privkey)
-    enode = host_port_pubkey_to_uri(b'0.0.0.0', base_port, bootstrap_node_pubkey)
+    enode = host_port_pubkey_to_uri('0.0.0.0', base_port, bootstrap_node_pubkey)
 
     services = [NodeDiscovery, peermanager.PeerManager, service_class]
 

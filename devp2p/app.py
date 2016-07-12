@@ -22,7 +22,7 @@ class BaseApp(object):
 
     def register_service(self, service):
         """
-        registeres protocol with app, which will be accessible as
+        registers protocol with app, which will be accessible as
         app.services.<protocol.name> (e.g. app.services.p2p or app.services.eth)
         """
         assert isinstance(service, BaseService)
@@ -64,7 +64,7 @@ def main():
     slogging.configure(config_string=':debug')
 
     # read config
-    sample_config = """
+    sample_config = b"""
 p2p:
     num_peers: 10
     bootstrap_nodes:

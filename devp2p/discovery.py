@@ -123,7 +123,8 @@ class Node(kademlia.Node):
         return cls(pubkey, Address(ip, int(port)))
 
     def to_uri(self):
-        return utils.host_port_pubkey_to_uri(self.address.ip, self.address.udp_port, self.pubkey)
+        return utils.host_port_pubkey_to_uri(str_to_bytes(self.address.ip),
+            self.address.udp_port, self.pubkey)
 
 
 class DiscoveryProtocolTransport(object):
