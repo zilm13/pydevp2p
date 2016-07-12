@@ -7,6 +7,7 @@ from devp2p.crypto import privtopub as privtopub_raw, sha3
 from devp2p.utils import colors, COLOR_END
 from devp2p import app_helper
 import rlp
+from rlp.utils import encode_hex, decode_hex
 import gevent
 try:
     import ethereum.slogging as slogging
@@ -36,7 +37,7 @@ class Token(rlp.Serializable):
     def __repr__(self):
         try:
             return '<%s(counter=%d hash=%s)>' % (self.__class__.__name__, self.counter,
-                                                 self.hash.encode('hex')[:4])
+                                                 encode_hex(self.hash)[:4])
         except:
             return '<%s>' % (self.__class__.__name__)
 
@@ -97,7 +98,7 @@ class ExampleService(WiredService):
 
     def __init__(self, app):
         self.config = app.config
-        self.address = privtopub_raw(self.config['node']['privkey_hex'].decode('hex'))
+        self.address = privtopub_raw(decode_hex(self.config['node']['privkey_hex']))
         super(ExampleService, self).__init__(app)
 
     def start(self):
