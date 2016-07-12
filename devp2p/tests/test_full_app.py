@@ -158,10 +158,10 @@ class ExampleServiceAppDisconnect(ExampleService):
 
 @pytest.mark.parametrize('num_nodes', [3, 6])
 class TestFullApp:
-    @pytest.mark.xfail(platform.python_implementation() == "PyPy" or \
-                       (platform.python_implementation() == "CPython" and \
-                        platform.sys.version_info[0] >= 3),
-                       reason="Unkown failure on PyPy / CPython3. See ethereum/pydevp2p#37")
+    @pytest.mark.skipif(platform.python_implementation() == "PyPy" or \
+                        (platform.python_implementation() == "CPython" and \
+                         platform.sys.version_info[0] >= 3),
+                        reason="Unkown failure on PyPy / CPython3. See ethereum/pydevp2p#37")
     @pytest.mark.timeout(60)
     def test_inc_counter_app(self, num_nodes):
         class TestDriver(object):
@@ -182,10 +182,10 @@ class TestFullApp:
         )
 
 
-@pytest.mark.xfail(platform.python_implementation() == "PyPy" or \
-                   (platform.python_implementation() == "CPython" and \
-                    platform.sys.version_info[0] >= 3),
-                   reason="Unkown failure on PyPy / CPython3. See ethereum/pydevp2p#37")
+@pytest.mark.skipif(platform.python_implementation() == "PyPy" or \
+                    (platform.python_implementation() == "CPython" and \
+                     platform.sys.version_info[0] >= 3),
+                    reason="Unkown failure on PyPy / CPython3. See ethereum/pydevp2p#37")
 @pytest.mark.timeout(20)
 def test_app_restart():
     """
@@ -204,10 +204,10 @@ def test_app_restart():
                    num_nodes=3, min_peers=2, max_peers=2)
 
 
-@pytest.mark.xfail(platform.python_implementation() == "PyPy" or \
-                   (platform.python_implementation() == "CPython" and \
-                    platform.sys.version_info[0] >= 3),
-                   reason="Unkown failure on PyPy / CPython3. See ethereum/pydevp2p#37")
+@pytest.mark.skipif(platform.python_implementation() == "PyPy" or \
+                    (platform.python_implementation() == "CPython" and \
+                     platform.sys.version_info[0] >= 3),
+                    reason="Unkown failure on PyPy / CPython3. See ethereum/pydevp2p#37")
 @pytest.mark.timeout(30)
 def test_disconnect():
     """
