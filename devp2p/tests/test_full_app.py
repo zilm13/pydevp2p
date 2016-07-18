@@ -204,10 +204,6 @@ def test_app_restart():
                    num_nodes=3, min_peers=2, max_peers=2)
 
 
-@pytest.mark.skipif(platform.python_implementation() == "PyPy" or \
-                    (platform.python_implementation() == "CPython" and \
-                     platform.sys.version_info[0] >= 3),
-                    reason="Unkown failure on PyPy / CPython3. See ethereum/pydevp2p#37")
 @pytest.mark.timeout(30)
 def test_disconnect():
     """
