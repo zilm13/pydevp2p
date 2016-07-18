@@ -7,7 +7,7 @@ from devp2p.crypto import privtopub as privtopub_raw, sha3
 from devp2p.utils import colors, COLOR_END
 from devp2p import app_helper
 import rlp
-from rlp.utils import encode_hex, decode_hex
+from rlp.utils import encode_hex, decode_hex, is_integer
 import gevent
 try:
     import ethereum.slogging as slogging
@@ -26,7 +26,7 @@ class Token(rlp.Serializable):
     ]
 
     def __init__(self, counter=0, sender=''):
-        assert isinstance(counter, int)
+        assert is_integer(counter)
         assert isinstance(sender, bytes)
         super(Token, self).__init__(counter, sender)
 
