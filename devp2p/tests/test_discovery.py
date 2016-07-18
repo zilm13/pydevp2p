@@ -3,6 +3,7 @@ from devp2p import kademlia
 from devp2p import crypto
 from devp2p.app import BaseApp
 from rlp.utils import decode_hex, encode_hex
+from devp2p.utils import remove_chars
 import gevent
 import random
 
@@ -47,6 +48,7 @@ def test_address():
     assert host_a.ip in ("127.0.0.1", "::1")
 
 #############################
+
 
 class AppMock(object):
     pass
@@ -99,7 +101,7 @@ def test_packing():
     alice = NodeDiscoveryMock(host='127.0.0.1', port=1, seed='alice').protocol
     bob = NodeDiscoveryMock(host='127.0.0.1', port=1, seed='bob').protocol
 
-    cmd_id = 3 # findnode
+    cmd_id = 3  # findnode
     payload = [b'a', [b'b', b'c']]
     message = alice.pack(cmd_id, payload)
 
@@ -129,15 +131,15 @@ def test_ping_pong():
 
 eip8_packets = dict(
     # ping packet with version 4, additional list elements
-    ping1 = decode_hex(b'''
+    ping1=decode_hex(remove_chars('''
     e9614ccfd9fc3e74360018522d30e1419a143407ffcce748de3e22116b7e8dc92ff74788c0b6663a
     aa3d67d641936511c8f8d6ad8698b820a7cf9e1be7155e9a241f556658c55428ec0563514365799a
     4be2be5a685a80971ddcfa80cb422cdd0101ec04cb847f000001820cfa8215a8d790000000000000
     000000000000000000018208ae820d058443b9a3550102
-    '''.replace(b' ', b'').replace(b'\n', b'')),
+    ''', ' \n\t')),
 
     # ping packet with version 555, additional list elements and additional random data
-    ping2 = decode_hex(b'''
+    ping2=decode_hex(remove_chars('''
     577be4349c4dd26768081f58de4c6f375a7a22f3f7adda654d1428637412c3d7fe917cadc56d4e5e
     7ffae1dbe3efffb9849feb71b262de37977e7c7a44e677295680e9e38ab26bee2fcbae207fba3ff3
     d74069a50b902a82c9903ed37cc993c50001f83e82022bd79020010db83c4d001500000000abcdef
@@ -146,30 +148,30 @@ eip8_packets = dict(
     3fa4090c408f6b4bc3701562c031041d4702971d102c9ab7fa5eed4cd6bab8f7af956f7d565ee191
     7084a95398b6a21eac920fe3dd1345ec0a7ef39367ee69ddf092cbfe5b93e5e568ebc491983c09c7
     6d922dc3
-    '''.replace(b' ', b'').replace(b'\n', b'')),
+    ''', ' \n\t')),
 
     # pong packet with additional list elements and additional random data
-    pong = decode_hex(b'''
+    pong=decode_hex(remove_chars('''
     09b2428d83348d27cdf7064ad9024f526cebc19e4958f0fdad87c15eb598dd61d08423e0bf66b206
     9869e1724125f820d851c136684082774f870e614d95a2855d000f05d1648b2d5945470bc187c2d2
     216fbe870f43ed0909009882e176a46b0102f846d79020010db885a308d313198a2e037073488208
     ae82823aa0fbc914b16819237dcd8801d7e53f69e9719adecb3cc0e790c57e91ca4461c9548443b9
     a355c6010203c2040506a0c969a58f6f9095004c0177a6b47f451530cab38966a25cca5cb58f0555
     42124e
-    '''.replace(b' ', b'').replace(b'\n', b'')),
+    ''', ' \n\t')),
 
     # findnode packet with additional list elements and additional random data
-    findnode = decode_hex(b'''
+    findnode=decode_hex(remove_chars('''
     c7c44041b9f7c7e41934417ebac9a8e1a4c6298f74553f2fcfdcae6ed6fe53163eb3d2b52e39fe91
     831b8a927bf4fc222c3902202027e5e9eb812195f95d20061ef5cd31d502e47ecb61183f74a504fe
     04c51e73df81f25c4d506b26db4517490103f84eb840ca634cae0d49acb401d8a4c6b6fe8c55b70d
     115bf400769cc1400f3258cd31387574077f301b421bc84df7266c44e9e6d569fc56be0081290476
     7bf5ccd1fc7f8443b9a35582999983999999280dc62cc8255c73471e0a61da0c89acdc0e035e260a
     dd7fc0c04ad9ebf3919644c91cb247affc82b69bd2ca235c71eab8e49737c937a2c396
-    '''.replace(b' ', b'').replace(b'\n', b'')),
+    ''', ' \t\n')),
 
     # neighbours packet with additional list elements and additional random data
-    neighbours = decode_hex(b'''
+    neighbours=decode_hex(remove_chars('''
     c679fc8fe0b8b12f06577f2e802d34f6fa257e6137a995f6f4cbfc9ee50ed3710faf6e66f932c4c8
     d81d64343f429651328758b47d3dbc02c4042f0fff6946a50f4a49037a72bb550f3a7872363a83e1
     b9ee6469856c24eb4ef80b7535bcf99c0004f9015bf90150f84d846321163782115c82115db84031
@@ -182,14 +184,16 @@ eip8_packets = dict(
     13198a2e037073488203e78203e8b8408dcab8618c3253b558d459da53bd8fa68935a719aff8b811
     197101a4b2b47dd2d47295286fc00cc081bb542d760717d1bdd6bec2c37cd72eca367d6dd3b9df73
     8443b9a355010203b525a138aa34383fec3d2719a0
-    '''.replace(b' ', b'').replace(b'\n', b'')),
+    ''', ' \n\t')),
 )
+
 
 def test_eip8_packets():
     disc = NodeDiscoveryMock(host='127.0.0.1', port=1, seed='bob').protocol
     fromaddr = discovery.Address("127.0.0.1", 9999)
     for packet in eip8_packets.values():
         disc.unpack(packet)
+
 
 # ############ test with real UDP ##################
 
@@ -295,17 +299,17 @@ def main():
 
     # add external node
 
-    go_local = 'enode://6ed2fecb28ff17dec8647f08aa4368b57790000e0e9b33a7b91f32c41b6ca9ba21600e9a8c44248ce63a71544388c6745fa291f88f8b81e109ba3da11f7b41b9@127.0.0.1:30303'
+    go_local = b'enode://6ed2fecb28ff17dec8647f08aa4368b57790000e0e9b33a7b91f32c41b6ca9ba21600e9a8c44248ce63a71544388c6745fa291f88f8b81e109ba3da11f7b41b9@127.0.0.1:30303'
 
-    go_bootstrap = 'enode://6cdd090303f394a1cac34ecc9f7cda18127eafa2a3a06de39f6d920b0e583e062a7362097c7c65ee490a758b442acd5c80c6fce4b148c6a391e946b45131365b@54.169.166.226:30303'
+    go_bootstrap = b'enode://6cdd090303f394a1cac34ecc9f7cda18127eafa2a3a06de39f6d920b0e583e062a7362097c7c65ee490a758b442acd5c80c6fce4b148c6a391e946b45131365b@54.169.166.226:30303'
 
-    cpp_bootstrap = 'enode://24f904a876975ab5c7acbedc8ec26e6f7559b527c073c6e822049fee4df78f2e9c74840587355a068f2cdb36942679f7a377a6d8c5713ccf40b1d4b99046bba0@5.1.83.226:30303'
+    cpp_bootstrap = b'enode://24f904a876975ab5c7acbedc8ec26e6f7559b527c073c6e822049fee4df78f2e9c74840587355a068f2cdb36942679f7a377a6d8c5713ccf40b1d4b99046bba0@5.1.83.226:30303'
 
-    n1 = 'enode://1d799d32547761cf66250f94b4ac1ebfc3246ce9bd87fbf90ef8d770faf48c4d96290ea0c72183d6c1ddca3d2725dad018a6c1c5d1971dbaa182792fa937e89d@162.247.54.200:1024'
-    n2 = 'enode://1976e20d6ec2de2dd4df34d8e949994dc333da58c967c62ca84b4d545d3305942207565153e94367f5d571ef79ce6da93c5258e88ca14788c96fbbac40f4a4c7@52.0.216.64:30303'
-    n3 = 'enode://14bb48727c8a103057ba06cc010c810e9d4beef746c54d948b681218195b3f1780945300c2534d422d6069f7a0e378c450db380f8efff8b4eccbb48c0c5bb9e8@179.218.168.19:30303'
+    n1 = b'enode://1d799d32547761cf66250f94b4ac1ebfc3246ce9bd87fbf90ef8d770faf48c4d96290ea0c72183d6c1ddca3d2725dad018a6c1c5d1971dbaa182792fa937e89d@162.247.54.200:1024'
+    n2 = b'enode://1976e20d6ec2de2dd4df34d8e949994dc333da58c967c62ca84b4d545d3305942207565153e94367f5d571ef79ce6da93c5258e88ca14788c96fbbac40f4a4c7@52.0.216.64:30303'
+    n3 = b'enode://14bb48727c8a103057ba06cc010c810e9d4beef746c54d948b681218195b3f1780945300c2534d422d6069f7a0e378c450db380f8efff8b4eccbb48c0c5bb9e8@179.218.168.19:30303'
 
-    nb = 'enode://1976e20d6ec2de2dd4df34d8e949994dc333da58c967c62ca84b4d545d3305942207565153e94367f5d571ef79ce6da93c5258e88ca14788c96fbbac40f4a4c7@52.0.216.64:30303'
+    nb = b'enode://1976e20d6ec2de2dd4df34d8e949994dc333da58c967c62ca84b4d545d3305942207565153e94367f5d571ef79ce6da93c5258e88ca14788c96fbbac40f4a4c7@52.0.216.64:30303'
 
     node_uri = cpp_bootstrap
 

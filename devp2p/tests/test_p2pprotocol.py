@@ -2,6 +2,7 @@ from devp2p.p2p_protocol import P2PProtocol
 from devp2p.service import WiredService
 from devp2p.app import BaseApp
 from devp2p.multiplexer import Packet
+from devp2p.utils import remove_chars
 import pytest
 from rlp.utils import decode_hex
 # notify peer of successfulll handshake!
@@ -79,11 +80,11 @@ def test_protocol():
     assert peer.stopped
 
 
-eip8_hello = decode_hex('''
+eip8_hello = decode_hex(remove_chars('''
     f87137916b6e6574682f76302e39312f706c616e39cdc5836574683dc6846d6f726b1682270fb840
     fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569
     bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877c883666f6f836261720304
-'''.replace('\n', '').replace(' ', ''))
+''', ' \n\t'))
 
 def test_eip8_hello():
     peer = PeerMock()
