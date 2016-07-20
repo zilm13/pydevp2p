@@ -34,8 +34,8 @@ class ExampleServiceIncCounter(ExampleService):
             assert p.remote_client_version != my_version
 
         # check the peers is connected to distinct nodes
-        my_peers_with_hello_received = filter(lambda p: p.remote_client_version != '', my_peers)
-        versions = map(lambda p: p.remote_client_version, my_peers_with_hello_received)
+        my_peers_with_hello_received = list(filter(lambda p: p.remote_client_version != '', my_peers))
+        versions = list(map(lambda p: p.remote_client_version, my_peers_with_hello_received))
         self.log('versions', versions=versions)
         assert len(set(versions)) == len(versions)
 
@@ -106,7 +106,7 @@ class ExampleServiceIncCounter(ExampleService):
         self.log("ASSERT", broadcasted=len(self.broadcasted), collected=len(self.collected))
         assert len(self.collected) > len(self.broadcasted)
 
-        for turn in xrange(1, self.testdriver.COUNTER_LIMIT):
+        for turn in range(1, self.testdriver.COUNTER_LIMIT):
             if (turn-1) % self.testdriver.NUM_NODES == self.config['node_num']:
                 assert turn in self.broadcasted
             else:
@@ -158,8 +158,6 @@ class ExampleServiceAppDisconnect(ExampleService):
 
 @pytest.mark.parametrize('num_nodes', [3, 6])
 class TestFullApp:
-    @pytest.mark.xfail(platform.sys.version_info[0] >= 3,
-                       reason="Unkown failure on Python 3. See ethereum/pydevp2p#37")
     @pytest.mark.timeout(60)
     def test_inc_counter_app(self, num_nodes):
         class TestDriver(object):
@@ -180,8 +178,6 @@ class TestFullApp:
         )
 
 
-@pytest.mark.xfail(platform.sys.version_info[0] >= 3,
-                   reason="Unkown failure on Python3. See ethereum/pydevp2p#37")
 @pytest.mark.timeout(20)
 def test_app_restart():
     """
