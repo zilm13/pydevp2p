@@ -141,9 +141,10 @@ class Peer(gevent.Greenlet):
         for service in sorted(self.peermanager.wired_services, key=operator.attrgetter('name')):
             proto = service.wire_protocol
             assert isinstance(service, WiredService)
+            assert isinstance(proto.name, bytes)
             if proto.name in remote_services:
                 if remote_services[proto.name] == proto.version:
-                    if service != self.peermanager:  # p2p protcol already registered
+                    if service != self.peermanager:  # p2p protocol already registered
                         self.connect_service(service)
                 else:
                     log.debug('wrong version', service=proto.name, local_version=proto.version,

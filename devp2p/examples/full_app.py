@@ -46,7 +46,7 @@ class ExampleProtocol(BaseProtocol):
     protocol_id = 1
     network_id = 0
     max_cmd_id = 1  # Actually max id is 0, but 0 is the special value.
-    name = 'example'
+    name = b'example'
     version = 1
 
     def __init__(self, peer, service):

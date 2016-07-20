@@ -40,7 +40,7 @@ class BaseService(Greenlet):
     @classmethod
     def register_with_app(klass, app):
         """
-        services know best how to initiate themselfs.
+        services know best how to initiate themselves.
         create a service instance, propably based on
         app.config and app.services
         """

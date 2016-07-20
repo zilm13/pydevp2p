@@ -64,7 +64,7 @@ class P2PProtocol(BaseProtocol):
     https://github.com/ethereum/wiki/wiki/%C3%90%CE%9EVp2p-Wire-Protocol
     """
     protocol_id = 0
-    name = 'p2p'
+    name = b'p2p'
     version = 4
     max_cmd_id = 15
 
