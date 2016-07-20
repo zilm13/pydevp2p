@@ -437,7 +437,7 @@ class KademliaProtocol(object):
             return
 
         # check for timed out pings and eventually evict them
-        for _pingid, (timeout, _node, replacement) in self._expected_pongs.items():
+        for _pingid, (timeout, _node, replacement) in list(self._expected_pongs.items()):
             if time.time() > timeout:
                 log.debug('deleting timedout node', remoteid=_node,
                           pingid=encode_hex(_pingid)[:8])
