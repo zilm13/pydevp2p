@@ -278,7 +278,7 @@ def test_bootstrap_udp():
     for i, app in enumerate(apps):
         num = len(kproto(app).routing)
         print(num)
-        if i < len(apps) / 2:  # only the first half has enough time to get all updates
+        if i < len(apps) // 2:  # only the first half has enough time to get all updates
             assert num >= num_apps - 1
 
 

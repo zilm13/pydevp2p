@@ -27,7 +27,7 @@ def test_app_restart():
     peermanager.PeerManager.register_with_app(a_app)
 
     # Restart app 10-times: there should be no exception
-    for i in range(0, 10):
+    for i in range(10):
         a_app.start()
         assert a_app.services.peermanager.server.started
         try_tcp_connect((host, port))
@@ -36,7 +36,7 @@ def test_app_restart():
         assert a_app.services.peermanager.is_stopped
 
     # Start the app 10-times: there should be no exception like 'Bind error'
-    for i in range(0, 10):
+    for i in range(10):
         a_app.start()
         assert a_app.services.peermanager.server.started
         try_tcp_connect((host, port))
