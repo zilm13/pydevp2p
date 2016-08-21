@@ -485,9 +485,11 @@ class KademliaProtocol(object):
             self.find_node(rid)
 
         # check and removed timed out find requests
-        for nodeid, timeout in tuple(self._find_requests.items()):
-            if time.time() > timeout:
-                del self._find_requests[nodeid]
+        self._find_requests = {
+            nodeid: timeout
+            for nodeid, timeout in self._find_requests.items()
+            if time.time() <= timeout
+        }
 
         log.debug('updated', num_nodes=len(self.routing), num_buckets=len(self.routing.buckets))
 
