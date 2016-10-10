@@ -490,6 +490,7 @@ class DiscoveryProtocol(kademlia.WireInterface):
         log.debug('<<< ping', node=node)
         remote_address = Address.from_endpoint(*payload[1])  # from address
         my_address = Address.from_endpoint(*payload[2])  # my address
+        assert my_address is not None
         self.get_node(nodeid).address.update(remote_address)
         self.kademlia.recv_ping(node, echo=mdc)
 

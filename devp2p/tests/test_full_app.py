@@ -3,9 +3,7 @@ import platform
 import pytest
 from devp2p import discovery
 from devp2p import app_helper
-from devp2p.app_helper import mk_privkey
-from devp2p.peermanager import PeerManager
-from devp2p.examples.full_app import Token, ExampleService, ExampleProtocol, ExampleApp
+from devp2p.examples.full_app import Token, ExampleService, ExampleApp
 import gevent
 
 
@@ -83,13 +81,13 @@ class ExampleServiceIncCounter(ExampleService):
         turn = counter % self.config['num_nodes']
         if turn != self.config['node_num']:
             return
-        if counter+1 in self.broadcasted:
+        if counter + 1 in self.broadcasted:
             return
-        self.broadcasted.add(counter+1)
-        token = Token(counter=counter+1, sender=self.address)
-        self.log('sending token {}'.format(counter+1), token=token)
+        self.broadcasted.add(counter + 1)
+        token = Token(counter=counter + 1, sender=self.address)
+        self.log('sending token {}'.format(counter + 1), token=token)
         self.broadcast(token)
-        if counter+1 == self.testdriver.COUNTER_LIMIT:
+        if counter + 1 == self.testdriver.COUNTER_LIMIT:
             self.stop_test()
 
     def stop_test(self):
@@ -104,7 +102,7 @@ class ExampleServiceIncCounter(ExampleService):
         assert len(self.collected) > len(self.broadcasted)
 
         for turn in xrange(1, self.testdriver.COUNTER_LIMIT):
-            if (turn-1) % self.testdriver.NUM_NODES == self.config['node_num']:
+            if (turn - 1) % self.testdriver.NUM_NODES == self.config['node_num']:
                 assert turn in self.broadcasted
             else:
                 assert turn in self.collected
