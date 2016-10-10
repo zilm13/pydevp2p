@@ -1,10 +1,7 @@
 import platform
 
 import pytest
-import os
-import time
-import copy
-import inspect
+from devp2p import discovery
 from devp2p import app_helper
 from devp2p.app_helper import mk_privkey
 from devp2p.peermanager import PeerManager
@@ -161,23 +158,28 @@ class TestFullApp:
     @pytest.mark.xfail(platform.python_implementation() == "PyPy",
                        reason="Unkown failure on PyPy. See ethereum/pydevp2p#37")
     @pytest.mark.timeout(60)
-    def test_inc_counter_app(self, num_nodes):
-        class TestDriver(object):
-            NUM_NODES = num_nodes
-            COUNTER_LIMIT = 1024
-            NODES_PASSED_SETUP = set()
-            NODES_PASSED_INC_COUNTER = set()
+    def test_inc_counter_app(self, monkeypatch, num_nodes):
+        try:
+            discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks([], [])
 
-        ExampleServiceIncCounter.testdriver = TestDriver()
+            class TestDriver(object):
+                NUM_NODES = num_nodes
+                COUNTER_LIMIT = 1024
+                NODES_PASSED_SETUP = set()
+                NODES_PASSED_INC_COUNTER = set()
 
-        app_helper.run(
-            ExampleApp,
-            ExampleServiceIncCounter,
-            num_nodes=num_nodes,
-            min_peers=num_nodes-1,
-            max_peers=num_nodes-1,
-            random_port=True  # Use a random port to avoid 'Address already in use' errors
-        )
+            ExampleServiceIncCounter.testdriver = TestDriver()
+
+            app_helper.run(
+                ExampleApp,
+                ExampleServiceIncCounter,
+                num_nodes=num_nodes,
+                min_peers=num_nodes - 1,
+                max_peers=num_nodes - 1,
+                random_port=True  # Use a random port to avoid 'Address already in use' errors
+            )
+        finally:
+            discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks.from_environment()
 
 
 @pytest.mark.xfail(platform.python_implementation() == "PyPy",
@@ -190,14 +192,19 @@ def test_app_restart():
     - Check that this node gets on_wire_protocol_start at least once after restart
         - on_wire_protocol_start indicates that node was able to communicate after restart
     """
-    class TestDriver(object):
-        APP_RESTARTED = False
-        TEST_SUCCESSFUL = False
+    try:
+        discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks([], [])
 
-    ExampleServiceAppRestart.testdriver = TestDriver()
+        class TestDriver(object):
+            APP_RESTARTED = False
+            TEST_SUCCESSFUL = False
 
-    app_helper.run(ExampleApp, ExampleServiceAppRestart,
-                   num_nodes=3, min_peers=2, max_peers=2)
+        ExampleServiceAppRestart.testdriver = TestDriver()
+
+        app_helper.run(ExampleApp, ExampleServiceAppRestart,
+                    num_nodes=3, min_peers=2, max_peers=2)
+    finally:
+        discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks.from_environment()
 
 
 @pytest.mark.xfail(platform.python_implementation() == "PyPy",
@@ -209,18 +216,22 @@ def test_disconnect():
     - Run app with min_peers > max_peers to force lots of peer.stop() (too many peers)
     - After X seconds of unsuccessful (by definition) discovery check that len(peers) <= min_peers
     """
+    try:
+        discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks([], [])
 
-    class TestDriver(object):
-        DISCOVERY_LOOP_SEC = 10
-        MIN_PEERS = 2
+        class TestDriver(object):
+            DISCOVERY_LOOP_SEC = 10
+            MIN_PEERS = 2
 
-    ExampleServiceAppDisconnect.testdriver = TestDriver()
+        ExampleServiceAppDisconnect.testdriver = TestDriver()
 
-    # To be able to run app with min_peers > max_peers one has to bypass asserts.
-    app_helper.assert_config = lambda a, b, c, d: True
+        # To be able to run app with min_peers > max_peers one has to bypass asserts.
+        app_helper.assert_config = lambda a, b, c, d: True
 
-    app_helper.run(ExampleApp, ExampleServiceAppDisconnect,
-                   num_nodes=3, min_peers=2, max_peers=1, random_port=True)
+        app_helper.run(ExampleApp, ExampleServiceAppDisconnect,
+                    num_nodes=3, min_peers=2, max_peers=1, random_port=True)
+    finally:
+        discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks.from_environment()
 
 
 if __name__ == "__main__":

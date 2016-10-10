@@ -10,42 +10,48 @@ random.seed(42)
 ###############################
 
 
-def test_address():
-    Address = discovery.Address
+def test_address(monkeypatch):
+    try:
+        discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks([], [])
 
-    ipv4 = '127.98.19.21'
-    ipv6 = '5aef:2b::8'
-    hostname = 'localhost'
-    port = 1
+        Address = discovery.Address
 
-    a4 = Address(ipv4, port)
-    aa4 = Address(ipv4, port)
-    assert a4 == aa4
-    a6 = Address(ipv6, port)
-    aa6 = Address(ipv6, port)
-    assert a6 == aa6
+        ipv4 = '127.98.19.21'
+        ipv6 = '5aef:2b::8'
+        hostname = 'localhost'
+        port = 1
 
-    b_a4 = a4.to_binary()
-    assert a4 == Address.from_binary(*b_a4)
+        a4 = Address(ipv4, port)
+        aa4 = Address(ipv4, port)
+        assert a4 == aa4
+        a6 = Address(ipv6, port)
+        aa6 = Address(ipv6, port)
+        assert a6 == aa6
 
-    b_a6 = a6.to_binary()
-    assert len(b_a6) == 3
-    assert a6 == Address.from_binary(*b_a6)
+        b_a4 = a4.to_binary()
+        assert a4 == Address.from_binary(*b_a4)
 
-    e_a4 = a4.to_endpoint()
-    assert a4 == Address.from_endpoint(*e_a4)
+        b_a6 = a6.to_binary()
+        assert len(b_a6) == 3
+        assert a6 == Address.from_binary(*b_a6)
 
-    e_a6 = a6.to_endpoint()
-    assert a6 == Address.from_endpoint(*e_a6)
+        e_a4 = a4.to_endpoint()
+        assert a4 == Address.from_endpoint(*e_a4)
 
-    assert len(b_a6[0]) == 16
-    assert len(b_a4[0]) == 4
-    assert isinstance(b_a6[1], str)
+        e_a6 = a6.to_endpoint()
+        assert a6 == Address.from_endpoint(*e_a6)
 
-    host_a = Address(hostname, port)
-    assert host_a.ip in ("127.0.0.1", "::1")
+        assert len(b_a6[0]) == 16
+        assert len(b_a4[0]) == 4
+        assert isinstance(b_a6[1], str)
+
+        host_a = Address(hostname, port)
+        assert host_a.ip in ("127.0.0.1", "::1")
+    finally:
+        discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks.from_environment()
 
 #############################
+
 
 class AppMock(object):
     pass
@@ -93,38 +99,49 @@ def test_packing():
     https://github.com/ethereum/go-ethereum/blob/develop/crypto/secp256k1/secp256.go#L299
     https://github.com/ethereum/go-ethereum/blob/develop/p2p/discover/udp.go#L343
     """
+    try:
+        discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks([], [])
 
-    # get two DiscoveryProtocol instances
-    alice = NodeDiscoveryMock(host='127.0.0.1', port=1, seed='alice').protocol
-    bob = NodeDiscoveryMock(host='127.0.0.1', port=1, seed='bob').protocol
+        # get two DiscoveryProtocol instances
+        alice = NodeDiscoveryMock(host='127.0.0.1', port=1, seed='alice').protocol
+        bob = NodeDiscoveryMock(host='127.0.0.1', port=1, seed='bob').protocol
 
-    cmd_id = 3 # findnode
-    payload = ['a', ['b', 'c']]
-    message = alice.pack(cmd_id, payload)
+        cmd_id = 3  # findnode
+        payload = ['a', ['b', 'c']]
+        message = alice.pack(cmd_id, payload)
 
-    r_pubkey, r_cmd_id, r_payload, mdc = bob.unpack(message)
-    assert r_cmd_id == cmd_id
-    assert r_payload == payload
-    assert len(r_pubkey) == len(alice.pubkey)
-    assert r_pubkey == alice.pubkey
+        r_pubkey, r_cmd_id, r_payload, mdc = bob.unpack(message)
+        assert r_cmd_id == cmd_id
+        assert r_payload == payload
+        assert len(r_pubkey) == len(alice.pubkey)
+        assert r_pubkey == alice.pubkey
+
+    finally:
+        discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks.from_environment()
 
 
 def test_ping_pong():
-    alice = NodeDiscoveryMock(host='127.0.0.1', port=1, seed='alice')
-    bob = NodeDiscoveryMock(host='127.0.0.2', port=2, seed='bob')
 
-    bob_node = alice.protocol.get_node(bob.protocol.pubkey, bob.address)
-    alice.protocol.kademlia.ping(bob_node)
-    assert len(NodeDiscoveryMock.messages) == 1
-    # inspect message in queue
-    msg = NodeDiscoveryMock.messages[0][2]
-    remote_pubkey, cmd_id, payload, mdc = bob.protocol.unpack(msg)
-    assert cmd_id == alice.protocol.cmd_id_map['ping']
-    bob.poll()  # receives ping, sends pong
-    assert len(NodeDiscoveryMock.messages) == 1
-    alice.poll()  # receives pong
-    assert len(NodeDiscoveryMock.messages) == 0
+    try:
+        discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks([], [])
 
+        alice = NodeDiscoveryMock(host='127.0.0.1', port=1, seed='alice')
+        bob = NodeDiscoveryMock(host='127.0.0.2', port=2, seed='bob')
+
+        bob_node = alice.protocol.get_node(bob.protocol.pubkey, bob.address)
+        alice.protocol.kademlia.ping(bob_node)
+        assert len(NodeDiscoveryMock.messages) == 1
+        # inspect message in queue
+        msg = NodeDiscoveryMock.messages[0][2]
+        remote_pubkey, cmd_id, payload, mdc = bob.protocol.unpack(msg)
+        assert cmd_id == alice.protocol.cmd_id_map['ping']
+        bob.poll()  # receives ping, sends pong
+        assert len(NodeDiscoveryMock.messages) == 1
+        alice.poll()  # receives pong
+        assert len(NodeDiscoveryMock.messages) == 0
+
+    finally:
+        discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks.from_environment()
 
 eip8_packets = dict(
     # ping packet with version 4, additional list elements
@@ -184,13 +201,21 @@ eip8_packets = dict(
     '''.translate(None, ' \t\n').decode('hex'),
 )
 
+
 def test_eip8_packets():
-    disc = NodeDiscoveryMock(host='127.0.0.1', port=1, seed='bob').protocol
-    fromaddr = discovery.Address("127.0.0.1", 9999)
-    for packet in eip8_packets.itervalues():
-        disc.unpack(packet)
+    try:
+        discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks([], [])
+
+        disc = NodeDiscoveryMock(host='127.0.0.1', port=1, seed='bob').protocol
+        fromaddr = discovery.Address("127.0.0.1", 9999)
+        assert fromaddr is not None
+        for packet in eip8_packets.itervalues():
+            disc.unpack(packet)
+    finally:
+        discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks.from_environment()
 
 # ############ test with real UDP ##################
+
 
 def get_app(port, seed):
     config = dict(
@@ -209,72 +234,83 @@ def get_app(port, seed):
 
 
 def test_ping_pong_udp():
-    alice_app = get_app(30000, 'alice')
-    alice_app.start()
-    alice_discovery = alice_app.services.discovery
-    bob_app = get_app(30001, 'bob')
-    bob_app.start()
-    bob_discovery = bob_app.services.discovery
+    try:
+        discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks([], [])
 
-    gevent.sleep(0.1)
-    bob_node = alice_discovery.protocol.get_node(bob_discovery.protocol.pubkey,
-                                                 bob_discovery.address)
-    assert bob_node not in alice_discovery.protocol.kademlia.routing
-    alice_discovery.protocol.kademlia.ping(bob_node)
-    assert bob_node not in alice_discovery.protocol.kademlia.routing
-    gevent.sleep(0.1)
-    bob_app.stop()
-    alice_app.stop()
-    assert bob_node in alice_discovery.protocol.kademlia.routing
+        alice_app = get_app(30000, 'alice')
+        alice_app.start()
+        alice_discovery = alice_app.services.discovery
+        bob_app = get_app(30001, 'bob')
+        bob_app.start()
+        bob_discovery = bob_app.services.discovery
+
+        gevent.sleep(0.1)
+        bob_node = alice_discovery.protocol.get_node(bob_discovery.protocol.pubkey,
+                                                    bob_discovery.address)
+        assert bob_node not in alice_discovery.protocol.kademlia.routing
+        alice_discovery.protocol.kademlia.ping(bob_node)
+        assert bob_node not in alice_discovery.protocol.kademlia.routing
+        gevent.sleep(0.1)
+        bob_app.stop()
+        alice_app.stop()
+        assert bob_node in alice_discovery.protocol.kademlia.routing
+
+    finally:
+        discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks.from_environment()
 
 
 def test_bootstrap_udp():
     """
     startup num_apps udp server and node applications
     """
+    try:
+        discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks([], [])
 
-    # set timeout to something more tolerant
-    kademlia.k_request_timeout = 10000.
+        # set timeout to something more tolerant
+        kademlia.k_request_timeout = 10000.
 
-    num_apps = 6
-    apps = []
-    for i in range(num_apps):
-        app = get_app(30002 + i, 'app%d' % i)
-        app.start()
-        apps.append(app)
+        num_apps = 6
+        apps = []
+        for i in range(num_apps):
+            app = get_app(30002 + i, 'app%d' % i)
+            app.start()
+            apps.append(app)
 
-    gevent.sleep(0.1)
-    sleep_delay = 1  # we need to wait for the packets to be delivered
+        gevent.sleep(0.1)
+        sleep_delay = 1  # we need to wait for the packets to be delivered
 
-    kproto = lambda app: app.services.discovery.protocol.kademlia
-    this_node = lambda app: kproto(app).this_node
+        kproto = lambda app: app.services.discovery.protocol.kademlia
+        this_node = lambda app: kproto(app).this_node
 
-    boot_node = this_node(apps[0])
-    assert boot_node.address
+        boot_node = this_node(apps[0])
+        assert boot_node.address
 
-    for app in apps[1:]:
-        print 'test bootstrap from=%s to=%s' % (this_node(app), boot_node)
-        kproto(app).bootstrap([boot_node])
-        gevent.sleep(sleep_delay)
+        for app in apps[1:]:
+            print 'test bootstrap from=%s to=%s' % (this_node(app), boot_node)
+            kproto(app).bootstrap([boot_node])
+            gevent.sleep(sleep_delay)
 
-    gevent.sleep(sleep_delay * 2)
+        gevent.sleep(sleep_delay * 2)
 
-    for app in apps[1:]:
-        print 'test find_node from=%s' % (this_node(app))
-        kproto(app).find_node(this_node(app).id)
-        gevent.sleep(sleep_delay)
+        for app in apps[1:]:
+            print 'test find_node from=%s' % (this_node(app))
+            kproto(app).find_node(this_node(app).id)
+            gevent.sleep(sleep_delay)
 
-    gevent.sleep(sleep_delay * 2)
+        gevent.sleep(sleep_delay * 2)
 
-    for app in apps:
-        app.stop()
+        for app in apps:
+            app.stop()
 
-    # now all nodes should know each other
-    for i, app in enumerate(apps):
-        num = len(kproto(app).routing)
-        print num
-        if i < len(apps) / 2:  # only the first half has enough time to get all updates
-            assert num >= num_apps - 1
+        # now all nodes should know each other
+        for i, app in enumerate(apps):
+            num = len(kproto(app).routing)
+            print num
+            if i < len(apps) / 2:  # only the first half has enough time to get all updates
+                assert num >= num_apps - 1
+
+    finally:
+        discovery.ALLOWED_NETWORKS = discovery.AllowedNetworks.from_environment()
 
 
 def main():
