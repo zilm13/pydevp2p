@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import time
 from socket import AF_INET, AF_INET6
 
@@ -36,9 +37,105 @@ class PacketExpired(DefectiveMessage):
 enc_port = lambda p: utils.ienc4(p)[-2:]
 dec_port = utils.idec
 
+default_network_blacklist = [
+    # Derived from `ipaddress._IPv4Constants._private_networks`.
+    # ipaddress.IPv4Network(u'0.0.0.0/8'),  # excluded
+    ipaddress.IPv4Network(u'10.0.0.0/8'),
+    ipaddress.IPv4Network(u'127.0.0.0/8'),
+    ipaddress.IPv4Network(u'169.254.0.0/16'),
+    ipaddress.IPv4Network(u'172.16.0.0/12'),
+    ipaddress.IPv4Network(u'192.0.0.0/29'),
+    ipaddress.IPv4Network(u'192.0.0.170/31'),
+    ipaddress.IPv4Network(u'192.0.2.0/24'),
+    ipaddress.IPv4Network(u'192.168.0.0/16'),
+    ipaddress.IPv4Network(u'198.18.0.0/15'),
+    ipaddress.IPv4Network(u'198.51.100.0/24'),
+    ipaddress.IPv4Network(u'203.0.113.0/24'),
+    ipaddress.IPv4Network(u'240.0.0.0/4'),
+    ipaddress.IPv4Network(u'255.255.255.255/32'),
+]
+
+NETWORK_BLACKLIST = default_network_blacklist
+
+
+class AllowedNetworks(object):
+    """Black-/white list, that allows `address in AllowedNetworks()` comparison.
+
+    If users want to change the content of the lists, they should set environemnt
+    variables with the keys
+
+        DEVP2P_NETWORK_WHITELIST="<network>,<network>,..." (default: empty)
+        DEVP2P_NETWORK_BLACKLIST="<network>,<network>,..." (default: see `default_network_blacklist`)
+
+    The whitelist takes precedence over the blacklist, i.e. if an address is found in
+    whitelist, it is considered valid.
+
+    User libraries can manipulate the entries in `os.environ` before importing, or explicitely
+    override `devp2p.discovery.ALLOWED_NETWORKS` with an instance of `devp2p.discovery.AllowedNetworks`.
+    """
+
+    ENVIRONMENT_WHITELIST_KEY = 'DEVP2P_NETWORK_WHITELIST'
+    ENVIRONMENT_BLACKLIST_KEY = 'DEVP2P_NETWORK_BLACKLIST'
+
+    def __init__(self, network_blacklist, network_whitelist):
+        self._blacklist = list(network_blacklist)
+        self._whitelist = []
+        for network in network_whitelist:
+            self.whitelist(network)
+
+    @classmethod
+    def from_environment(cls):
+        def from_env(key):
+            result = []
+            for net in os.environ.get(key, '').split(','):
+                try:
+                    result.append(ipaddress.ip_network(unicode(net)))
+                except ValueError:
+                    log.error("network description invalid", value=net)
+            return result
+
+        whitelist = from_env(cls.ENVIRONMENT_WHITELIST_KEY)
+        if cls.ENVIRONMENT_BLACKLIST_KEY in os.environ:
+            blacklist = from_env(cls.ENVIRONMENT_BLACKLIST_KEY)
+        else:
+            blacklist = NETWORK_BLACKLIST
+
+        return cls(blacklist, whitelist)
+
+    def whitelist(self, network):
+        """Add `network` to `_whitelist` and exclude it from `_blacklist`.
+        """
+        blacklist = []
+        assert (isinstance(network, ipaddress.IPv4Network) or
+                isinstance(network, ipaddress.IPv6Network))
+        for black in self._blacklist:
+            if network.overlaps(black):
+                log.debug("excluding {net} from {black}".format(net=network, black=black))
+                if network.subnet_of(black):
+                    blacklist.extend(black.address_exclude(network))
+                else:
+                    pass  # discard `black`
+            else:
+                blacklist.append(black)
+        self._blacklist = blacklist
+        self._whitelist.append(network)
+
+    def __contains__(self, ip_address):
+        assert (isinstance(ip_address, ipaddress.IPv4Address) or
+                isinstance(ip_address, ipaddress.IPv6Address))
+
+        if len(self._whitelist):
+            log.debug('network whitelist set')
+            if any(ip_address in net for net in self._whitelist):
+                log.debug('white list match')
+                return True
+
+        return not any(ip_address in net for net in self._blacklist)
+
+ALLOWED_NETWORKS = AllowedNetworks.from_environment()
+
 
 class Address(object):
-
     """
     Extend later, but make sure we deal with objects
     Multiaddress
@@ -47,6 +144,7 @@ class Address(object):
 
     def __init__(self, ip, udp_port, tcp_port=0, from_binary=False):
         tcp_port = tcp_port or udp_port
+        self._ip = None
         if from_binary:
             self.udp_port = dec_port(udp_port)
             self.tcp_port = dec_port(tcp_port)
@@ -67,8 +165,12 @@ class Address(object):
                 if ai[0] == AF_INET
                     or (ai[0] == AF_INET6 and ai[4][3] == 0)
             ]
-            # Arbitrarily choose the first of the resolved addresses
-            self._ip = ipaddress.ip_address(ips[0])
+            # Arbitrarily choose the first of the resolved allowed address
+            ips = filter(lambda _ip: ipaddress.ip_address(_ip) in ALLOWED_NETWORKS, ips)
+            if len(ips):
+                self._ip = ipaddress.ip_address(ips[0])
+        if not self._ip or self._ip not in ALLOWED_NETWORKS:
+            raise ValueError("no (acceptable) IP for address %s" % ip)
 
     @property
     def ip(self):
