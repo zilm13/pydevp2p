@@ -37,6 +37,8 @@ after_success:
 notifications:
   slack:
     secure: P/qjOkPitf55axoE7CEaHcgOsYhyEL2lhByGNDJtRtvVPv7+Z9qMYQCoituR8WJqqtYBUL4SbdYs8H8b4ZZd8tPMssCFG/JRw0rloVn6Vy4Nb3VPDGkKNnFJhtYCKzBnqgDzTw1zvOVzXsj2YV7SdxeMtQGMPLZaTixG91OYzPk=
+  webhooks:
+    - secure: "BlIGii1h/OxRRug7eVdcQYCeKB4ZSnSBFAFL7jhueORchLesAZNuF1DVd34rAU1+fWNjqceHUw8SFdaosOOp4aYBtmkwv8R2qGUWX0f1Gs7U1ahvCuTvOpBWwiaH+yeLwoGMAhdnUlsUi+g/dC8cT5F8W4NxadwKsOVOc0uSIN8="
 deploy:
   provider: pypi
   user: ethereum_pypi_automated
