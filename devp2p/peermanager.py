@@ -173,31 +173,35 @@ class PeerManager(WiredService):
         log.info('waiting for bootstrap')
         gevent.sleep(self.discovery_delay)
         while not self.is_stopped:
-            num_peers, min_peers = self.num_peers(), self.config['p2p']['min_peers']
             try:
+                num_peers, min_peers = self.num_peers(), self.config['p2p']['min_peers']
                 kademlia_proto = self.app.services.discovery.protocol.kademlia
+                if num_peers < min_peers:
+                    log.debug('missing peers', num_peers=num_peers,
+                              min_peers=min_peers, known=len(kademlia_proto.routing))
+                    nodeid = kademlia.random_nodeid()
+                    kademlia_proto.find_node(nodeid)  # fixme, should be a task
+                    gevent.sleep(self.discovery_delay)  # wait for results
+                    neighbours = kademlia_proto.routing.neighbours(nodeid, 2)
+                    if not neighbours:
+                        gevent.sleep(self.connect_loop_delay)
+                        continue
+                    node = random.choice(neighbours)
+                    log.debug('connecting random', node=node)
+                    local_pubkey = crypto.privtopub(self.config['node']['privkey_hex'].decode('hex'))
+                    if node.pubkey == local_pubkey:
+                        continue
+                    if node.pubkey in [p.remote_pubkey for p in self.peers]:
+                        continue
+                    self.connect((node.address.ip, node.address.tcp_port), node.pubkey)
             except AttributeError:
                 # TODO: Is this the correct thing to do here?
                 log.error("Discovery service not available.")
                 break
-            if num_peers < min_peers:
-                log.debug('missing peers', num_peers=num_peers,
-                          min_peers=min_peers, known=len(kademlia_proto.routing))
-                nodeid = kademlia.random_nodeid()
-                kademlia_proto.find_node(nodeid)  # fixme, should be a task
-                gevent.sleep(self.discovery_delay)  # wait for results
-                neighbours = kademlia_proto.routing.neighbours(nodeid, 2)
-                if not neighbours:
-                    gevent.sleep(self.connect_loop_delay)
-                    continue
-                node = random.choice(neighbours)
-                log.debug('connecting random', node=node)
-                local_pubkey = crypto.privtopub(self.config['node']['privkey_hex'].decode('hex'))
-                if node.pubkey == local_pubkey:
-                    continue
-                if node.pubkey in [p.remote_pubkey for p in self.peers]:
-                    continue
-                self.connect((node.address.ip, node.address.tcp_port), node.pubkey)
+            except Exception as e:
+                log.error("discovery failed", error=e, num_peers=num_peers, min_peers=min_peers)
+                import traceback
+                log.error(traceback.format_exc())
             gevent.sleep(self.connect_loop_delay)
 
         evt = gevent.event.Event()
