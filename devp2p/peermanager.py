@@ -150,9 +150,9 @@ class PeerManager(WiredService):
         log.info('starting listener', addr=self.listen_addr)
         self.server.set_handle(self._on_new_connection)
         self.server.start()
-        self._bootstrap()
         super(PeerManager, self).start()
-        gevent.spawn_later(0.000001, self._discovery_loop)
+        gevent.spawn_later(0.001, self._bootstrap, self.config['p2p']['bootstrap_nodes'])
+        gevent.spawn_later(1, self._discovery_loop)
 
     def _on_new_connection(self, connection, address):
         log.debug('incoming connection', connection=connection)
