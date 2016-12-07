@@ -46,6 +46,7 @@ class ConnectionMonitor(gevent.Greenlet):
                 self.log.debug('unresponsive_peer', monitor=self)
                 self.proto.peer.report_error('not responding to ping')
                 self.proto.stop()
+                self.proto.peer.stop()
                 self.kill()
 
     def stop(self):
