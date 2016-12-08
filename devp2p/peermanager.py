@@ -3,6 +3,7 @@ import gevent
 import socket
 import atexit
 import time
+import re
 from gevent.server import StreamServer
 from gevent.socket import create_connection, timeout
 from service import WiredService
@@ -69,6 +70,10 @@ class PeerManager(WiredService):
         if len(self.peers) > self.config['p2p']['max_peers']:
             log.debug('too many peers', max=self.config['p2p']['max_peers'])
             proto.send_disconnect(proto.disconnect.reason.too_many_peers)
+            return False
+        if re.search('Ethereum\(J\)', client_version_string):
+            # FIXME: talk with EthereumJ
+            proto.send_disconnect(proto.disconnect.reason.useless_peer)
             return False
         if remote_pubkey in [p.remote_pubkey for p in self.peers if p != proto.peer]:
             log.debug('connected to that node already')

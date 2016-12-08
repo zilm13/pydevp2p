@@ -112,7 +112,7 @@ class Peer(gevent.Greenlet):
 
     def receive_hello(self, proto, version, client_version_string, capabilities,
                       listen_port, remote_pubkey):
-        log.info('received hello', version=version,
+        log.info('received hello', proto=proto, version=version,
                  client_version=client_version_string, capabilities=capabilities)
         assert isinstance(remote_pubkey, bytes)
         assert len(remote_pubkey) == 64
@@ -278,7 +278,7 @@ class Peer(gevent.Greenlet):
     def stop(self):
         if not self.is_stopped:
             self.is_stopped = True
-            log.debug('stopped', peer=self)
+            log.debug('peer stopped', peer=self)
             for p in self.protocols.values():
                 p.stop()
             self.peermanager.peers.remove(self)
