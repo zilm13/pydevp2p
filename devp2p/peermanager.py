@@ -174,6 +174,9 @@ class PeerManager(WiredService):
             log.error('stopped peers in peers list', inlist=len(ps), active=len(aps))
         return len(aps)
 
+    def remote_pubkeys(self):
+        return [p.remote_pubkey for p in self.peers]
+
     def _discovery_loop(self):
         log.info('waiting for bootstrap')
         gevent.sleep(self.discovery_delay)
@@ -192,6 +195,9 @@ class PeerManager(WiredService):
                         gevent.sleep(self.connect_loop_delay)
                         continue
                     node = random.choice(neighbours)
+                    if node.pubkey in self.remote_pubkeys():
+                        gevent.sleep(self.discovery_delay)
+                        continue
                     log.debug('connecting random', node=node)
                     local_pubkey = crypto.privtopub(self.config['node']['privkey_hex'].decode('hex'))
                     if node.pubkey == local_pubkey:
