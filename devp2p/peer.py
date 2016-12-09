@@ -195,13 +195,17 @@ class Peer(gevent.Greenlet):
         assert isinstance(packet, multiplexer.Packet)
         try:
             protocol, cmd_id = self.protocol_cmd_id_from_packet(packet)
+            log.debug('recv packet', cmd=protocol.cmd_by_id[cmd_id], protocol=protocol.name, orig_cmd_id=packet.cmd_id)
+            packet.cmd_id = cmd_id  # rewrite
+            protocol.receive_packet(packet)
         except UnknownCommandError, e:
             log.error('received unknown cmd', error=e, packet=packet)
             return
-        log.debug('recv packet', cmd=protocol.cmd_by_id[
-                  cmd_id], protocol=protocol.name, orig_cmd_id=packet.cmd_id)
-        packet.cmd_id = cmd_id  # rewrite
-        protocol.receive_packet(packet)
+        except Exception, e:
+            log.error('failed to handle packet', error=e)
+            import traceback
+            log.error(traceback.format_exc())
+            self.stop()
 
     def send(self, data):
         if not data:
