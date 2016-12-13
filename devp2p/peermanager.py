@@ -71,8 +71,8 @@ class PeerManager(WiredService):
             log.debug('too many peers', max=self.config['p2p']['max_peers'])
             proto.send_disconnect(proto.disconnect.reason.too_many_peers)
             return False
-        if re.search('(Ethereum\(J\))|(Parity)', client_version_string):
-            # FIXME: talk with EthereumJ & Parity
+        if not re.search('^Geth', client_version_string):
+            # FIXME: talk with EthereumJ & Parity & reth
             proto.send_disconnect(proto.disconnect.reason.useless_peer)
             return False
         if remote_pubkey in [p.remote_pubkey for p in self.peers if p != proto.peer]:
