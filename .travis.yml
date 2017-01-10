@@ -3,14 +3,19 @@ python:
 - '2.7'
 - '3.4'
 - '3.5'
+- '3.6'
 - pypy
 cache:
   directories:
   - "$HOME/.cache/pip"
 # Gevent still seems a bit wobbly on PyPy - allow failures for now
+# Also Python 3 support isn't merged yet - reenable when done
 matrix:
   allow_failures:
     - python: pypy
+    - python: '3.4'
+    - python: '3.5'
+    - python: '3.6'
 install:
 - |
   if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ]; then
