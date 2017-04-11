@@ -8,4 +8,4 @@ coverage
 tox
 secp256k1==0.13.2
 pycryptodome>=3.3.1
-rlp==0.4.7
+rlp==0.5.0
