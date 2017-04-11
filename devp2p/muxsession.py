@@ -1,10 +1,10 @@
 import gevent
-import multiplexer
-from rlpxcipher import RLPxSession
-from crypto import ECCx
+from .multiplexer import Multiplexer, Packet
+from .rlpxcipher import RLPxSession
+from .crypto import ECCx
 
 
-class MultiplexedSession(multiplexer.Multiplexer):
+class MultiplexedSession(Multiplexer):
     def __init__(self, privkey, hello_packet, remote_pubkey=None):
         self.is_initiator = bool(remote_pubkey)
         self.hello_packet = hello_packet
@@ -14,7 +14,7 @@ class MultiplexedSession(multiplexer.Multiplexer):
         self.rlpx_session = RLPxSession(
             ecc, is_initiator=bool(remote_pubkey))
         self._remote_pubkey = remote_pubkey
-        multiplexer.Multiplexer.__init__(self, frame_cipher=self.rlpx_session)
+        Multiplexer.__init__(self, frame_cipher=self.rlpx_session)
         if self.is_initiator:
             self._send_init_msg()
 
@@ -70,8 +70,8 @@ class MultiplexedSession(multiplexer.Multiplexer):
 
     def add_packet(self, packet):
         "encodes a packet and adds the message(s) to the msg queue"
-        assert isinstance(packet, multiplexer.Packet)
+        assert isinstance(packet, Packet)
         assert self.is_ready  # don't send anything until handshake is finished
-        multiplexer.Multiplexer.add_packet(self, packet)
+        Multiplexer.add_packet(self, packet)
         for f in self.pop_all_frames():
             self.message_queue.put(f.as_bytes())

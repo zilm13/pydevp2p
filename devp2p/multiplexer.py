@@ -1,6 +1,7 @@
 from gevent.queue import Queue
 from collections import OrderedDict
 import rlp
+from rlp.utils import str_to_bytes, is_integer
 import struct
 import sys
 
@@ -16,7 +17,7 @@ def ceil16(x):
 
 def rzpad16(data):
     if len(data) % 16:
-        data += '\x00' * (16 - len(data) % 16)
+        data += b'\x00' * (16 - len(data) % 16)
     return data
 
 
@@ -89,7 +90,7 @@ class Frame(object):
     def __init__(self, protocol_id, cmd_id, payload, sequence_id, window_size,
                  is_chunked_n=False, frames=None, frame_cipher=None):
         payload = memoryview(payload)
-        assert isinstance(window_size, (int, long))
+        assert is_integer(window_size)
         assert window_size % self.padding == 0
         assert isinstance(cmd_id, int) and cmd_id < 256
         self.cmd_id = cmd_id
@@ -185,7 +186,7 @@ class Frame(object):
     def enc_cmd_id(self):
         if not self.is_chunked_n:
             return rlp.encode(self.cmd_id, sedes=rlp.sedes.big_endian_int)  # unsigned byte
-        return ''
+        return b''
 
     @property
     def body(self):
@@ -199,7 +200,7 @@ class Frame(object):
         b = self.enc_cmd_id  # packet-type
         length = len(b) + len(self.payload)
         assert isinstance(self.payload, memoryview)
-        return b + self.payload.tobytes() + '\x00' * (ceil16(length) - length)
+        return b + self.payload.tobytes() + b'\x00' * (ceil16(length) - length)
 
     def get_frames(self):
         return self.frames
@@ -209,7 +210,7 @@ class Frame(object):
         if not self.frame_cipher:
             assert len(self.header) == 16 == self.header_size
             assert len(self.body) == self.body_size(padded=True)
-            dummy_mac = '\x00' * self.mac_size
+            dummy_mac = b'\x00' * self.mac_size
             r = self.header + dummy_mac + self.body + dummy_mac
             assert len(r) == self.frame_size()
             return r
@@ -226,7 +227,7 @@ class Packet(object):
     Packets are emitted and received by subprotocols
     """
 
-    def __init__(self, protocol_id=0, cmd_id=0, payload='', prioritize=False):
+    def __init__(self, protocol_id=0, cmd_id=0, payload=b'', prioritize=False):
         self.protocol_id = protocol_id
         self.cmd_id = cmd_id
         self.payload = payload
@@ -306,9 +307,9 @@ class Multiplexer(object):
         initial pws = 8kb
         """
         if protocol_id and not self.is_active_protocol(protocol_id):
-            s = self.max_window_size / (1 + self.num_active_protocols)
+            s = self.max_window_size // (1 + self.num_active_protocols)
         else:
-            s = self.max_window_size / max(1, self.num_active_protocols)
+            s = self.max_window_size // max(1, self.num_active_protocols)
         return s - s % 16  # should be a multiple of padding size
 
     def add_protocol(self, protocol_id):
@@ -322,7 +323,7 @@ class Multiplexer(object):
 
     @property
     def next_protocol(self):
-        protocols = self.queues.keys()
+        protocols = tuple(self.queues.keys())
         if self.last_protocol == protocols[-1]:
             next_protocol = protocols[0]
         else:
@@ -395,7 +396,7 @@ class Multiplexer(object):
         """
         returns the frames for the next protocol up to protocol window size bytes
         """
-        protocols = self.queues.keys()
+        protocols = tuple(self.queues.keys())
         idx = protocols.index(self.next_protocol)
         protocols = protocols[idx:] + protocols[:idx]
         assert len(protocols) == len(self.queues.keys())
@@ -415,7 +416,7 @@ class Multiplexer(object):
         return frames
 
     def pop_all_frames_as_bytes(self):
-        return ''.join(f.as_bytes() for f in self.pop_all_frames())
+        return b''.join(f.as_bytes() for f in self.pop_all_frames())
 
     def decode_header(self, buffer):
         assert isinstance(buffer, memoryview)
@@ -442,7 +443,7 @@ class Multiplexer(object):
         if not header:
             header = self.decode_header(buffer[:Frame.header_size + Frame.mac_size].tobytes())
 
-        body_size = struct.unpack('>I', '\x00' + header[:3])[0]
+        body_size = struct.unpack('>I', b'\x00' + header[:3])[0]
 
         if self.frame_cipher:
             body = self.frame_cipher.decrypt_body(buffer[Frame.header_size + Frame.mac_size:].tobytes(),
@@ -534,9 +535,9 @@ class Multiplexer(object):
                 return []
             else:
                 self._cached_decode_header = self.decode_header(memoryview(self._decode_buffer))
-                assert isinstance(self._cached_decode_header, str)
+                assert isinstance(self._cached_decode_header, bytes)
 
-        body_size = struct.unpack('>I', '\x00' + self._cached_decode_header[:3])[0]
+        body_size = struct.unpack('>I', b'\x00' + self._cached_decode_header[:3])[0]
         required_len = Frame.header_size + Frame.mac_size + ceil16(body_size) + Frame.mac_size
         if len(self._decode_buffer) >= required_len:
             packet = self.decode_body(memoryview(self._decode_buffer), self._cached_decode_header)

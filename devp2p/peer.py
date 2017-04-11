@@ -2,15 +2,16 @@ import time
 import gevent
 import operator
 from collections import OrderedDict
-from protocol import BaseProtocol
-from p2p_protocol import P2PProtocol
-from service import WiredService
-import multiplexer
-from muxsession import MultiplexedSession
-from crypto import ECIESDecryptionError
-import slogging
+from .protocol import BaseProtocol
+from .p2p_protocol import P2PProtocol
+from .service import WiredService
+from .multiplexer import MultiplexerError, Packet
+from .muxsession import MultiplexedSession
+from .crypto import ECIESDecryptionError
+from devp2p import slogging
 import gevent.socket
-import rlpxcipher
+from devp2p import rlpxcipher
+from rlp.utils import decode_hex
 
 log = slogging.get_logger('p2p.peer')
 
@@ -39,7 +40,7 @@ class Peer(gevent.Greenlet):
         log.debug('peer init', peer=self)
 
         # create multiplexed encrypted session
-        privkey = self.config['node']['privkey_hex'].decode('hex')
+        privkey = decode_hex(self.config['node']['privkey_hex'])
         hello_packet = P2PProtocol.get_hello_packet(self)
         self.mux = MultiplexedSession(privkey, hello_packet, remote_pubkey=remote_pubkey)
         self.remote_pubkey = remote_pubkey
@@ -140,9 +141,10 @@ class Peer(gevent.Greenlet):
         for service in sorted(self.peermanager.wired_services, key=operator.attrgetter('name')):
             proto = service.wire_protocol
             assert isinstance(service, WiredService)
+            assert isinstance(proto.name, bytes)
             if proto.name in remote_services:
                 if remote_services[proto.name] == proto.version:
-                    if service != self.peermanager:  # p2p protcol already registered
+                    if service != self.peermanager:  # p2p protocol already registered
                         self.connect_service(service)
                 else:
                     log.debug('wrong version', service=proto.name, local_version=proto.version,
@@ -192,10 +194,10 @@ class Peer(gevent.Greenlet):
         raise UnknownCommandError('no protocol for protocol id %s' % packet.protocol_id)
 
     def _handle_packet(self, packet):
-        assert isinstance(packet, multiplexer.Packet)
+        assert isinstance(packet, Packet)
         try:
             protocol, cmd_id = self.protocol_cmd_id_from_packet(packet)
-        except UnknownCommandError, e:
+        except UnknownCommandError as e:
             log.error('received unknown cmd', error=e, packet=packet)
             return
         log.debug('recv packet', cmd=protocol.cmd_by_id[
@@ -268,7 +270,7 @@ class Peer(gevent.Greenlet):
                     log.debug('rlpx session error', peer=self, error=e)
                     self.report_error('rlpx session error')
                     self.stop()
-                except multiplexer.MultiplexerError as e:
+                except MultiplexerError as e:
                     log.debug('multiplexer error', peer=self, error=e)
                     self.report_error('multiplexer error')
                     self.stop()

@@ -5,6 +5,7 @@ from devp2p.service import BaseService
 from devp2p.discovery import NodeDiscovery
 from devp2p.crypto import privtopub as privtopub_raw, sha3
 from devp2p.utils import host_port_pubkey_to_uri, update_config_with_defaults
+from rlp.utils import encode_hex
 import gevent
 import copy
 
@@ -33,7 +34,7 @@ def create_app(node_num, config, services, app_class):
     config['node_num'] = node_num
 
     # create this node priv_key
-    config['node']['privkey_hex'] = mk_privkey('%d:udp:%d' % (seed, node_num)).encode('hex')
+    config['node']['privkey_hex'] = encode_hex(mk_privkey('%d:udp:%d' % (seed, node_num)))
     # set ports based on node
     config['discovery']['listen_port'] = base_port + node_num
     config['p2p']['listen_port'] = base_port + node_num
@@ -79,7 +80,7 @@ def run(app_class, service_class, num_nodes=3, seed=0, min_peers=2, max_peers=2,
     # get bootstrap node (node0) enode
     bootstrap_node_privkey = mk_privkey('%d:udp:%d' % (seed, 0))
     bootstrap_node_pubkey = privtopub_raw(bootstrap_node_privkey)
-    enode = host_port_pubkey_to_uri(b'0.0.0.0', base_port, bootstrap_node_pubkey)
+    enode = host_port_pubkey_to_uri('0.0.0.0', base_port, bootstrap_node_pubkey)
 
     services = [NodeDiscovery, peermanager.PeerManager, service_class]
 

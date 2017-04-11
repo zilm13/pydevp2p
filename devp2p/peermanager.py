@@ -5,15 +5,16 @@ import atexit
 import time
 from gevent.server import StreamServer
 from gevent.socket import create_connection, timeout
-from service import WiredService
-from protocol import BaseProtocol
-from p2p_protocol import P2PProtocol
-import kademlia
-from peer import Peer
-import crypto
-import utils
+from .service import WiredService
+from .protocol import BaseProtocol
+from .p2p_protocol import P2PProtocol
+from devp2p import kademlia
+from .peer import Peer
+from devp2p import crypto
+from devp2p import utils
+from rlp.utils import decode_hex
 
-import slogging
+from devp2p import slogging
 log = slogging.get_logger('p2p.peermgr')
 
 
@@ -58,7 +59,7 @@ class PeerManager(WiredService):
         # setup nodeid based on privkey
         if 'id' not in self.config['p2p']:
             self.config['node']['id'] = crypto.privtopub(
-                self.config['node']['privkey_hex'].decode('hex'))
+                decode_hex(self.config['node']['privkey_hex']))
 
         self.listen_addr = (self.config['p2p']['listen_host'], self.config['p2p']['listen_port'])
         self.server = StreamServer(self.listen_addr, handle=self._on_new_connection)
@@ -192,7 +193,7 @@ class PeerManager(WiredService):
                     continue
                 node = random.choice(neighbours)
                 log.debug('connecting random', node=node)
-                local_pubkey = crypto.privtopub(self.config['node']['privkey_hex'].decode('hex'))
+                local_pubkey = crypto.privtopub(decode_hex(self.config['node']['privkey_hex']))
                 if node.pubkey == local_pubkey:
                     continue
                 if node.pubkey in [p.remote_pubkey for p in self.peers]:
@@ -223,9 +224,9 @@ class PeerErrors(PeerErrorsBase):
 
         def report():
             for k, v in self.errors.items():
-                print k, self.client_versions.get(k, '')
+                print(k, self.client_versions.get(k, ''))
                 for e in v:
-                    print '\t', e
+                    print('\t', e)
 
         atexit.register(report)
 

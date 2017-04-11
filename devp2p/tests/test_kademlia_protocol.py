@@ -64,7 +64,7 @@ class WireMock(kademlia.WireInterface):
 
 def random_pubkey():
     pk = int_to_big_endian(random.getrandbits(kademlia.k_pubkey_size))
-    return '\x00' * (kademlia.k_pubkey_size / 8 - len(pk)) + pk
+    return b'\x00' * (kademlia.k_pubkey_size // 8 - len(pk)) + pk
 
 
 def random_node():
@@ -252,7 +252,7 @@ def test_eviction_node_active():
     assert msg[0] == 'ping'
     assert msg[1] == proto.this_node
     assert len(proto._expected_pongs) == 1
-    expected_pingid = proto._expected_pongs.keys()[0]
+    expected_pingid = tuple(proto._expected_pongs.keys())[0]
     assert len(expected_pingid) == 96
     echo = expected_pingid[:32]
     assert len(echo) == 32
@@ -261,7 +261,7 @@ def test_eviction_node_active():
 
     # reply in time
     # can not check w/o mcd
-    print 'sending pong'
+    print('sending pong')
     proto.recv_pong(eviction_candidate, echo)
 
     # expect no other messages
@@ -398,19 +398,19 @@ def test_ping_adds_sender():
 
 
 def test_two():
-    print
+    print("")
     one = get_wired_protocol()
     one.routing = routing_table(100)
     two = get_wired_protocol()
     wire = one.wire
     assert one.this_node != two.this_node
     two.ping(one.this_node)
-    # print 'messages', wire.messages
+    # print('messages', wire.messages)
     wire.process([one, two])
     two.find_node(two.this_node.id)
-    # print 'messages', wire.messages
+    # print('messages', wire.messages)
     msg = wire.process([one, two], steps=2)
-    # print 'messages', wire.messages
+    # print('messages', wire.messages)
     assert len(wire.messages) >= kademlia.k_bucket_size
     msg = wire.messages.pop(0)
     assert msg[1] == 'find_node'
@@ -439,7 +439,7 @@ def test_many(num_nodes=17):
         wire.process(protos)  # can all send in parallel
 
     for i, p in enumerate(protos):
-        # print i, len(p.routing)
+        # print(i, len(p.routing))
         assert len(p.routing) >= kademlia.k_bucket_size
 
     return protos

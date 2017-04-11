@@ -1,6 +1,7 @@
 from devp2p import peermanager
 from devp2p import crypto
 from devp2p.app import BaseApp
+from rlp.utils import encode_hex
 import devp2p.muxsession
 import rlp
 import devp2p.p2p_protocol
@@ -20,13 +21,13 @@ def test_app_restart():
     host, port = '127.0.0.1', 3020
 
     a_config = dict(p2p=dict(listen_host=host, listen_port=port),
-                    node=dict(privkey_hex=crypto.sha3('a').encode('hex')))
+                    node=dict(privkey_hex=encode_hex(crypto.sha3(b'a'))))
 
     a_app = BaseApp(a_config)
     peermanager.PeerManager.register_with_app(a_app)
 
     # Restart app 10-times: there should be no exception
-    for i in xrange(0, 10):
+    for i in range(10):
         a_app.start()
         assert a_app.services.peermanager.server.started
         try_tcp_connect((host, port))
@@ -35,7 +36,7 @@ def test_app_restart():
         assert a_app.services.peermanager.is_stopped
 
     # Start the app 10-times: there should be no exception like 'Bind error'
-    for i in xrange(0, 10):
+    for i in range(10):
         a_app.start()
         assert a_app.services.peermanager.server.started
         try_tcp_connect((host, port))

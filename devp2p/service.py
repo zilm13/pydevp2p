@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from gevent import Greenlet
-import utils
+from devp2p import utils
 
 
 class BaseService(Greenlet):
@@ -40,7 +40,7 @@ class BaseService(Greenlet):
     @classmethod
     def register_with_app(klass, app):
         """
-        services know best how to initiate themselfs.
+        services know best how to initiate themselves.
         create a service instance, propably based on
         app.config and app.services
         """
@@ -69,9 +69,9 @@ class WiredService(BaseService):
     wire_protocol = None
 
     def on_wire_protocol_start(self, proto):
-        from protocol import BaseProtocol
+        from .protocol import BaseProtocol
         assert isinstance(proto, BaseProtocol)
 
     def on_wire_protocol_stop(self, proto):
-        from protocol import BaseProtocol
+        from .protocol import BaseProtocol
         assert isinstance(proto, BaseProtocol)

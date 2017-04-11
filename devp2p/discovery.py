@@ -6,13 +6,14 @@ import gevent
 import gevent.socket
 import ipaddress
 import rlp
+from rlp.utils import decode_hex, is_integer, str_to_bytes, safe_ord
 from gevent.server import DatagramServer
 
-import slogging
+from devp2p import slogging
 from devp2p import crypto
 from devp2p import kademlia
 from devp2p import utils
-from service import BaseService
+from .service import BaseService
 
 
 log = slogging.get_logger('p2p.discovery')
@@ -36,6 +37,9 @@ class PacketExpired(DefectiveMessage):
 enc_port = lambda p: utils.ienc4(p)[-2:]
 dec_port = utils.idec
 
+import sys
+PY3 = sys.version_info[0] >= 3
+
 
 class Address(object):
 
@@ -51,8 +55,8 @@ class Address(object):
             self.udp_port = dec_port(udp_port)
             self.tcp_port = dec_port(tcp_port)
         else:
-            assert isinstance(udp_port, (int, long))
-            assert isinstance(tcp_port, (int, long))
+            assert is_integer(udp_port)
+            assert is_integer(tcp_port)
             self.udp_port = udp_port
             self.tcp_port = tcp_port
         try:
@@ -62,7 +66,7 @@ class Address(object):
             # We only want v4 or v6 addresses
             # see https://docs.python.org/2/library/socket.html#socket.getaddrinfo
             ips = [
-                unicode(ai[4][0])
+                str(ai[4][0]) if PY3 else unicode(ai[4][0])
                 for ai in gevent.socket.getaddrinfo(ip, None)
                 if ai[0] == AF_INET
                     or (ai[0] == AF_INET6 and ai[4][3] == 0)
@@ -119,7 +123,8 @@ class Node(kademlia.Node):
         return cls(pubkey, Address(ip, int(port)))
 
     def to_uri(self):
-        return utils.host_port_pubkey_to_uri(self.address.ip, self.address.udp_port, self.pubkey)
+        return utils.host_port_pubkey_to_uri(str_to_bytes(self.address.ip),
+            self.address.udp_port, self.pubkey)
 
 
 class DiscoveryProtocolTransport(object):
@@ -200,13 +205,13 @@ class DiscoveryProtocol(kademlia.WireInterface):
     encoders = dict(cmd_id=chr,
                     expiration=rlp.sedes.big_endian_int.serialize)
 
-    decoders = dict(cmd_id=ord,
+    decoders = dict(cmd_id=safe_ord,
                     expiration=rlp.sedes.big_endian_int.deserialize)
 
     def __init__(self, app, transport):
         self.app = app
         self.transport = transport
-        self.privkey = app.config['node']['privkey_hex'].decode('hex')
+        self.privkey = decode_hex(app.config['node']['privkey_hex'])
         self.pubkey = crypto.privtopub(self.privkey)
         self.nodes = dict()   # nodeid->Node,  fixme should be loaded
         self.this_node = Node(self.pubkey, self.transport.address)
@@ -218,8 +223,8 @@ class DiscoveryProtocol(kademlia.WireInterface):
 
     def get_node(self, nodeid, address=None):
         "return node or create new, update address if supplied"
-        assert isinstance(nodeid, str)
-        assert len(nodeid) == 512 / 8
+        assert isinstance(nodeid, bytes)
+        assert len(nodeid) == 512 // 8
         assert address or (nodeid in self.nodes)
         if nodeid not in self.nodes:
             self.nodes[nodeid] = Node(nodeid, address)
@@ -271,7 +276,7 @@ class DiscoveryProtocol(kademlia.WireInterface):
         assert cmd_id in self.cmd_id_map.values()
         assert isinstance(payload, list)
 
-        cmd_id = self.encoders['cmd_id'](cmd_id)
+        cmd_id = str_to_bytes(self.encoders['cmd_id'](cmd_id))
         expiration = self.encoders['expiration'](int(time.time() + self.expiration))
         encoded_data = rlp.encode(payload + [expiration])
         signed_data = crypto.sha3(cmd_id + encoded_data)
@@ -441,10 +446,9 @@ class DiscoveryProtocol(kademlia.WireInterface):
             unsigned expiration;
         };
         """
-        assert isinstance(target_node_id, long)
-        target_node_id = utils.int_to_big_endian(target_node_id).rjust(kademlia.k_pubkey_size / 8,
-                                                                       '\0')
-        assert len(target_node_id) == kademlia.k_pubkey_size / 8
+        assert is_integer(target_node_id)
+        target_node_id = utils.int_to_big_endian(target_node_id).rjust(kademlia.k_pubkey_size // 8, b'\0')
+        assert len(target_node_id) == kademlia.k_pubkey_size // 8
         log.debug('>>> find_node', remoteid=node)
         message = self.pack(self.cmd_id_map['find_node'], [target_node_id])
         self.send(node, message)

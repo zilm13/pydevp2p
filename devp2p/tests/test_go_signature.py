@@ -1,4 +1,5 @@
 from devp2p.crypto import ecdsa_sign, mk_privkey, privtopub, ecdsa_recover, ECCx
+from rlp.utils import decode_hex
 import pyelliptic
 
 
@@ -20,8 +21,7 @@ def test_go_sig():
     ethereum -port="40404" -loglevel=5  -nodekeyhex="9c22ff5f21f0b81b113e63f7db6da94fedef11b2119b4088b89664fb9a3cb658" -bootnodes="enode://2da47499d52d9161a778e4c711e22e8651cb90350ec066452f9516d1d11eb465d1ec42bb27ec6cd4488b8b6a1a411cb5ef83c16cbb8bee194624bb65fef0f7fd@127.0.0.1:30303"
     """
 
-    r_pubkey = "ab16b8c7fc1febb74ceedf1349944ffd4a04d11802451d02e808f08cb3b0c1c1a9c4e1efb7d309a762baa4c9c8da08890b3b712d1666b5b630d6c6a09cbba171".decode(
-        'hex')
+    r_pubkey = decode_hex("ab16b8c7fc1febb74ceedf1349944ffd4a04d11802451d02e808f08cb3b0c1c1a9c4e1efb7d309a762baa4c9c8da08890b3b712d1666b5b630d6c6a09cbba171")
     d = {'signed_data': 'a061e5b799b5bb3a3a68a7eab6ee11207d90672e796510ac455e985bd206e240',
          'cmd': 'find_node',
          'body': '03f847b840ab16b8c7fc1febb74ceedf1349944ffd4a04d11802451d02e808f08cb3b0c1c1a9c4e1efb7d309a762baa4c9c8da08890b3b712d1666b5b630d6c6a09cbba1718454e869b1',
@@ -29,16 +29,15 @@ def test_go_sig():
 
     priv_seed = 'test'
     priv_key = mk_privkey(priv_seed)
-    assert priv_key == "9c22ff5f21f0b81b113e63f7db6da94fedef11b2119b4088b89664fb9a3cb658".decode(
-        'hex')
+    assert priv_key == decode_hex("9c22ff5f21f0b81b113e63f7db6da94fedef11b2119b4088b89664fb9a3cb658")
     my_pubkey = privtopub(priv_key)
     assert my_pubkey == r_pubkey, (my_pubkey, r_pubkey)
-    go_body = d['body'].decode('hex')  # cmd_id, rlp.encoded
+    go_body = decode_hex(d['body'])  # cmd_id, rlp.encoded
     import rlp
     target_node_id, expiry = rlp.decode(go_body[1:])
     assert target_node_id == r_pubkey  # lookup for itself
-    go_signed_data = d['signed_data'].decode('hex')
-    go_signature = d['signature'].decode('hex')
+    go_signed_data = decode_hex(d['signed_data'])
+    go_signature = decode_hex(d['signature'])
 
     my_signature = ecdsa_sign(go_signed_data, priv_key)
     assert my_signature == ecdsa_sign(go_signed_data, priv_key)  # deterministic k
