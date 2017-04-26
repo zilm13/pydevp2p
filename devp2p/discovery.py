@@ -7,7 +7,7 @@ import gevent.socket
 import ipaddress
 import rlp
 from gevent.server import DatagramServer
-
+import miniupnpc
 import slogging
 from devp2p import crypto
 from devp2p import kademlia
@@ -515,6 +515,7 @@ class NodeDiscovery(BaseService, DiscoveryProtocolTransport):
 
     name = 'discovery'
     server = None  # will be set to DatagramServer
+    nat_upnp = None
     default_config = dict(
         discovery=dict(
             listen_port=30303,
@@ -562,11 +563,51 @@ class NodeDiscovery(BaseService, DiscoveryProtocolTransport):
         address = Address(ip=ip_port[0], udp_port=ip_port[1])
         self.receive(address, message)
 
+    def _add_portmap(self,port):
+	u = miniupnpc.UPnP()
+	self.nat_upnp = u
+	u.discoverdelay = 200
+	try:
+                log.debug('Discovering... delay=%ums' % u.discoverdelay)
+                ndevices = u.discover()
+                log.debug('%u device(s) detected', ndevices)
+
+                # select an igd
+                u.selectigd()
+                # display information about the IGD and the internet connection
+                log.debug('local ip address %s:', u.lanaddr)
+                externalipaddress = u.externalipaddress()
+                log.debug('external ip address %s:', externalipaddress)
+                log.debug('%s %s', u.statusinfo(), u.connectiontype())
+                log.debug('trying to redirect %s port %u UDP => %s port %u UDP' % (externalipaddress, port, u.lanaddr, port))
+
+                b = u.addportmapping(port, 'UDP', u.lanaddr, port,
+                            'UPnP IGD port %u' % port, '')
+                if b:
+                        log.info('Success. Now waiting for UDP request on %s:%u' % (externalipaddress ,port))
+                else:
+	                log.debug('Failed')
+        except Exception as e:
+	        log.debug('Exception :%s', e)
+
+    def _delete_portmap(self):
+        port = self.app.config['discovery']['listen_port']
+        try:
+                b = self.nat_upnp.deleteportmapping(port, 'UDP')
+                if b:
+                        log.debug('Successfully deleted port mapping')
+                else:
+                        log.debug('Failed to remove port mapping')
+	except Exception as e:
+                log.debug('Exception :%s', e)
+
     def start(self):
         log.info('starting discovery')
         # start a listening server
         ip = self.app.config['discovery']['listen_host']
         port = self.app.config['discovery']['listen_port']
+        # nat port mappin
+        self._add_portmap(port)
         log.info('starting listener', port=port, host=ip)
         self.server = DatagramServer((ip, port), handle=self._handle_packet)
         self.server.start()
@@ -584,6 +625,7 @@ class NodeDiscovery(BaseService, DiscoveryProtocolTransport):
 
     def stop(self):
         log.info('stopping discovery')
+        self._delete_portmap()
         self.server.stop()
         super(NodeDiscovery, self).stop()
 
