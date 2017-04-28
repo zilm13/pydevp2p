@@ -9,3 +9,4 @@ tox
 secp256k1==0.12.1
 pycryptodome>=3.3.1
 rlp>=0.4.4
+miniupnp
