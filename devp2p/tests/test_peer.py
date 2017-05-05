@@ -11,14 +11,15 @@ import devp2p.p2p_protocol
 import time
 import gevent
 import copy
+from rlp.utils import encode_hex, decode_hex
 
 
 def get_connected_apps():
     a_config = dict(p2p=dict(listen_host='127.0.0.1', listen_port=3005),
-                    node=dict(privkey_hex=crypto.sha3('a').encode('hex')))
+                    node=dict(privkey_hex=encode_hex(crypto.sha3(b'a'))))
     b_config = copy.deepcopy(a_config)
     b_config['p2p']['listen_port'] = 3006
-    b_config['node']['privkey_hex'] = crypto.sha3('b').encode('hex')
+    b_config['node']['privkey_hex'] = encode_hex(crypto.sha3(b'b'))
 
     a_app = BaseApp(a_config)
     peermanager.PeerManager.register_with_app(a_app)
@@ -34,7 +35,7 @@ def get_connected_apps():
     # connect
     host = b_config['p2p']['listen_host']
     port = b_config['p2p']['listen_port']
-    pubkey = crypto.privtopub(b_config['node']['privkey_hex'].decode('hex'))
+    pubkey = crypto.privtopub(decode_hex(b_config['node']['privkey_hex']))
     a_peermgr.connect((host, port), remote_pubkey=pubkey)
 
     return a_app, b_app
@@ -49,8 +50,6 @@ def test_handshake():
     b_app.stop()
 
 
-@pytest.mark.xfail(platform.python_implementation() == "PyPy",
-                   reason="Unkown failure on PyPy. See ethereum/pydevp2p#37")
 def test_big_transfer():
 
     class transfer(devp2p.p2p_protocol.BaseProtocol.command):
@@ -73,7 +72,7 @@ def test_big_transfer():
     st = time.time()
 
     def cb(proto, **data):
-        print 'took', time.time() - st, len(data['raw_data'])
+        print('took', time.time() - st, len(data['raw_data']))
 
     b_protocol.receive_transfer_callbacks.append(cb)
     raw_data = '0' * 1 * 1000 * 100
@@ -90,8 +89,6 @@ def test_big_transfer():
     gevent.sleep(0.1)
 
 
-@pytest.mark.xfail(platform.python_implementation() == "PyPy",
-                   reason="Unkown failure on PyPy. See ethereum/pydevp2p#37")
 def test_dumb_peer():
     """ monkeypatch receive_hello to make peer not to mark that hello was received.
     no hello in defined timeframe makes peer to stop """
@@ -119,7 +116,7 @@ def test_dumb_peer():
 
 def connect_go():
     a_config = dict(p2p=dict(listen_host='127.0.0.1', listen_port=3010),
-                    node=dict(privkey_hex=crypto.sha3('a').encode('hex')))
+                    node=dict(privkey_hex=encode_hex(crypto.sha3(b'a'))))
 
     a_app = BaseApp(a_config)
     peermanager.PeerManager.register_with_app(a_app)
@@ -128,8 +125,7 @@ def connect_go():
     a_peermgr = a_app.services.peermanager
 
     # connect
-    pubkey = "6ed2fecb28ff17dec8647f08aa4368b57790000e0e9b33a7b91f32c41b6ca9ba21600e9a8c44248ce63a71544388c6745fa291f88f8b81e109ba3da11f7b41b9".decode(
-        'hex')
+    pubkey = decode_hex("6ed2fecb28ff17dec8647f08aa4368b57790000e0e9b33a7b91f32c41b6ca9ba21600e9a8c44248ce63a71544388c6745fa291f88f8b81e109ba3da11f7b41b9")
     a_peermgr.connect(('127.0.0.1', 30303), remote_pubkey=pubkey)
     gevent.sleep(50)
     a_app.stop()

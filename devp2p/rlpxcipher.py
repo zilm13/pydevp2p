@@ -4,6 +4,7 @@ import struct
 import os
 import rlp
 from rlp import sedes
+from rlp.utils import safe_ord, str_to_bytes, ascii_chr
 from devp2p.crypto import sha3
 from Crypto.Hash import keccak
 from devp2p.crypto import ECCx
@@ -18,7 +19,7 @@ sha3_256 = lambda x: keccak.new(digest_bits=256, update_after_digest=True, data=
 def sxor(s1, s2):
     "string xor"
     assert len(s1) == len(s2)
-    return ''.join(chr(ord(a) ^ ord(b)) for a, b in zip(s1, s2))
+    return b''.join(ascii_chr(safe_ord(a) ^ safe_ord(b)) for a, b in zip(s1, s2))
 
 
 def ceil16(x):
@@ -67,7 +68,8 @@ class RLPxSession(object):
         def aes(data=''):
             return self.aes_enc.update(data)
 
-        def mac(data=''):
+        def mac(data=b''):
+            data = str_to_bytes(data)
             self.egress_mac.update(data)
             return self.egress_mac.digest()
 
@@ -94,7 +96,8 @@ class RLPxSession(object):
         def aes(data=''):
             return self.aes_dec.update(data)
 
-        def mac(data=''):
+        def mac(data=b''):
+            data = str_to_bytes(data)
             self.ingress_mac.update(data)
             return self.ingress_mac.digest()
 
@@ -114,7 +117,8 @@ class RLPxSession(object):
         def aes(data=''):
             return self.aes_dec.update(data)
 
-        def mac(data=''):
+        def mac(data=b''):
+            data = str_to_bytes(data)
             self.ingress_mac.update(data)
             return self.ingress_mac.digest()
 
@@ -141,7 +145,7 @@ class RLPxSession(object):
 
     def decrypt(self, data):
         header = self.decrypt_header(data[:32])
-        body_size = struct.unpack('>I', '\x00' + header[:3])[0]
+        body_size = struct.unpack(b'>I', b'\x00' + header[:3])[0]
         if not len(data) >= 32 + ceil16(body_size) + 16:
             raise FormatError('insufficient body length')
         frame = self.decrypt_body(data[32:], body_size)
@@ -188,7 +192,7 @@ class RLPxSession(object):
 
         # S || H(ephemeral-pubk) || pubk || nonce || 0x0
         auth_message = S + sha3(ephemeral_pubkey) + self.ecc.raw_pubkey + \
-            self.initiator_nonce + chr(flag)
+            self.initiator_nonce + ascii_chr(flag)
         assert len(auth_message) == 65 + 32 + 64 + 32 + 1 == 194
         return auth_message
 
@@ -199,7 +203,7 @@ class RLPxSession(object):
             sedes.Binary(min_length=32, max_length=32), # nonce
             sedes.BigEndianInt()                        # version
         ], strict=False)
-    
+
     def encrypt_auth_message(self, auth_message, remote_pubkey=None):
         assert self.is_initiator
         remote_pubkey = remote_pubkey or self.remote_pubkey
@@ -249,7 +253,7 @@ class RLPxSession(object):
         if not self.ecc.is_valid_key(pubkey):
             raise InvalidKeyError('invalid initiator pubkey')
         nonce = message[65+32+64 : 65+32+64+32]
-        known_flag = bool(ord(message[65+32+64+32:]))
+        known_flag = bool(safe_ord(message[65+32+64+32:]))
         assert known_flag == 0
         return (307, signature, pubkey, nonce, 4)
 
@@ -283,7 +287,7 @@ class RLPxSession(object):
             msg = self.create_eip8_auth_ack_message(ephemeral_pubkey, self.responder_nonce, version)
             assert len(msg) > 97
         else:
-            msg = ephemeral_pubkey + self.responder_nonce + '\x00'
+            msg = ephemeral_pubkey + self.responder_nonce + b'\x00'
             assert len(msg) == 97
         return msg
 
@@ -339,7 +343,7 @@ class RLPxSession(object):
         assert len(message) == 64+32+1
         eph_pubkey = message[:64]
         nonce = message[64:64 + 32]
-        known = ord(message[-1])
+        known = safe_ord(message[-1])
         assert known == 0
         return (210, eph_pubkey, nonce, 4)
 

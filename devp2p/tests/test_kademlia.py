@@ -10,7 +10,7 @@ random.seed(42)
 
 def random_pubkey():
     pk = int_to_big_endian(random.getrandbits(kademlia.k_pubkey_size))
-    return '\x00' * (kademlia.k_pubkey_size / 8 - len(pk)) + pk
+    return b'\x00' * (kademlia.k_pubkey_size // 8 - len(pk)) + pk
 
 
 def random_node():
@@ -79,7 +79,7 @@ def test_split2():
 
     # not every full bucket needs to be split
     assert len(split_buckets) < len(full_buckets)
-    # print 's/f/buckets', len(split_buckets), len(full_buckets)
+    # print('s/f/buckets', len(split_buckets), len(full_buckets))
 
     assert set(split_buckets).issubset(set(full_buckets))
 
@@ -153,11 +153,10 @@ def show_buckets():
     routing = routing_table(10000)
     for i, b in enumerate(routing.buckets):
         d = b.depth
-        print '  ' * d,
-        print 'bucket:%d, num nodes:%d depth:%d' % \
-            (i, len(b), kademlia.k_id_size - int(math.log(b.start ^ routing.this_node.id, 2)))
-    print 'routing.node is in bucket', \
-        routing.buckets.index(routing.bucket_by_node(routing.this_node))
+        print('%sbucket:%d, num nodes:%d depth:%d' % \
+            (' ' * d, i, len(b), kademlia.k_id_size - int(math.log(b.start ^ routing.this_node.id, 2))))
+    print('routing.node is in bucket', \
+        routing.buckets.index(routing.bucket_by_node(routing.this_node)))
 
 
 def create_json_bucket_test():
@@ -183,5 +182,5 @@ def create_json_bucket_test():
 
 
 if __name__ == '__main__':
-    # print create_json_bucket_test()
-    print show_buckets()
+    # print(create_json_bucket_test())
+    print(show_buckets())

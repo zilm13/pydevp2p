@@ -10,7 +10,7 @@ from tinyrpc.transports.wsgi import WsgiServerTransport
 from tinyrpc.server.gevent import RPCServerGreenlets
 from tinyrpc.dispatch import RPCDispatcher
 from service import BaseService
-import slogging
+from devp2p import slogging
 log = slogging.get_logger('jsonrpc')
 
 

@@ -1,8 +1,12 @@
-from UserDict import IterableUserDict
-from service import BaseService
-from slogging import get_logger
-import utils
-import crypto
+try:
+    from UserDict import IterableUserDict
+except ImportError:
+    from collections import UserDict as IterableUserDict
+from .service import BaseService
+from .slogging import get_logger
+from devp2p import utils
+from devp2p import crypto
+from rlp.utils import decode_hex
 from devp2p import __version__
 log = get_logger('app')
 
@@ -18,7 +22,7 @@ class BaseApp(object):
 
     def register_service(self, service):
         """
-        registeres protocol with app, which will be accessible as
+        registers protocol with app, which will be accessible as
         app.services.<protocol.name> (e.g. app.services.p2p or app.services.eth)
         """
         assert isinstance(service, BaseService)
@@ -52,15 +56,15 @@ def main():
     import sys
     import signal
     import gevent
-    from peermanager import PeerManager
-    from jsonrpc import JSONRPCServer
-    from discovery import NodeDiscovery
-    import slogging
+    from .peermanager import PeerManager
+    from .jsonrpc import JSONRPCServer
+    from .discovery import NodeDiscovery
+    from devp2p import slogging
     log = slogging.get_logger('app')
     slogging.configure(config_string=':debug')
 
     # read config
-    sample_config = """
+    sample_config = b"""
 p2p:
     num_peers: 10
     bootstrap_nodes:
@@ -78,7 +82,7 @@ node:
     """
     if len(sys.argv) == 1:
         config = yaml.load(io.BytesIO(sample_config))
-        pubkey = crypto.privtopub(config['node']['privkey_hex'].decode('hex'))
+        pubkey = crypto.privtopub(decode_hex(config['node']['privkey_hex']))
         config['node']['id'] = crypto.sha3(pubkey)
     else:
         fn = sys.argv[1]
@@ -88,7 +92,7 @@ node:
     # stop on every unhandled exception!
     gevent.get_hub().SYSTEM_ERROR = BaseException  # (KeyboardInterrupt, SystemExit, SystemError)
 
-    print config
+    print(config)
     # create app
     app = BaseApp(config)
 
