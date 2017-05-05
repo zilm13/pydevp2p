@@ -207,8 +207,6 @@ class PeerManager(WiredService):
                 break
             except Exception as e:
                 log.error("discovery failed", error=e, num_peers=num_peers, min_peers=min_peers)
-                import traceback
-                log.error(traceback.format_exc())
             gevent.sleep(self.connect_loop_delay)
 
         evt = gevent.event.Event()

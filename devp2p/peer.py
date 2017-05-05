@@ -208,8 +208,6 @@ class Peer(gevent.Greenlet):
             return
         except Exception, e:
             log.error('failed to handle packet', error=e)
-            import traceback
-            log.error(traceback.format_exc())
             self.stop()
 
     def send(self, data):
