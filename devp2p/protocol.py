@@ -164,7 +164,7 @@ class BaseProtocol(gevent.Greenlet):
         try:
             cmd(packet)
         except ProtocolError as e:
-            log.warn('protocol exception, stopping', error=e)
+            log.warn('protocol exception, stopping', error=e, peer=self.peer)
             self.stop()
 
     def send_packet(self, packet):

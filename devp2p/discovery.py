@@ -14,6 +14,7 @@ from devp2p import crypto
 from devp2p import kademlia
 from devp2p import utils
 from .service import BaseService
+from .upnp import add_portmap, remove_portmap
 
 
 log = slogging.get_logger('p2p.discovery')
@@ -519,6 +520,7 @@ class NodeDiscovery(BaseService, DiscoveryProtocolTransport):
 
     name = 'discovery'
     server = None  # will be set to DatagramServer
+    nat_upnp = None
     default_config = dict(
         discovery=dict(
             listen_port=30303,
@@ -571,6 +573,8 @@ class NodeDiscovery(BaseService, DiscoveryProtocolTransport):
         # start a listening server
         ip = self.app.config['discovery']['listen_host']
         port = self.app.config['discovery']['listen_port']
+        # nat port mappin
+        self.nat_upnp = add_portmap(port, 'UDP', 'Ethereum DEVP2P Discovery')
         log.info('starting listener', port=port, host=ip)
         self.server = DatagramServer((ip, port), handle=self._handle_packet)
         self.server.start()
@@ -588,6 +592,7 @@ class NodeDiscovery(BaseService, DiscoveryProtocolTransport):
 
     def stop(self):
         log.info('stopping discovery')
+        remove_portmap(self.nat_upnp, self.app.config['discovery']['listen_port'], 'UDP')
         self.server.stop()
         super(NodeDiscovery, self).stop()
 

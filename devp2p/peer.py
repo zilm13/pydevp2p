@@ -113,7 +113,7 @@ class Peer(gevent.Greenlet):
 
     def receive_hello(self, proto, version, client_version_string, capabilities,
                       listen_port, remote_pubkey):
-        log.info('received hello', version=version,
+        log.info('received hello', proto=proto, version=version,
                  client_version=client_version_string, capabilities=capabilities)
         assert isinstance(remote_pubkey, bytes)
         assert len(remote_pubkey) == 64
@@ -138,12 +138,17 @@ class Peer(gevent.Greenlet):
         # register in common protocols
         log.debug('connecting services', services=self.peermanager.wired_services)
         remote_services = dict((name, version) for name, version in capabilities)
+        remote_services = dict()
+        for name, version in capabilities:
+            if not name in remote_services:
+                remote_services[name] = []
+            remote_services[name].append(version)
         for service in sorted(self.peermanager.wired_services, key=operator.attrgetter('name')):
             proto = service.wire_protocol
             assert isinstance(service, WiredService)
             assert isinstance(proto.name, bytes)
             if proto.name in remote_services:
-                if remote_services[proto.name] == proto.version:
+                if proto.version in remote_services[proto.name]:
                     if service != self.peermanager:  # p2p protocol already registered
                         self.connect_service(service)
                 else:
@@ -197,13 +202,15 @@ class Peer(gevent.Greenlet):
         assert isinstance(packet, Packet)
         try:
             protocol, cmd_id = self.protocol_cmd_id_from_packet(packet)
+            log.debug('recv packet', cmd=protocol.cmd_by_id[cmd_id], protocol=protocol.name, orig_cmd_id=packet.cmd_id)
+            packet.cmd_id = cmd_id  # rewrite
+            protocol.receive_packet(packet)
         except UnknownCommandError as e:
             log.error('received unknown cmd', error=e, packet=packet)
             return
-        log.debug('recv packet', cmd=protocol.cmd_by_id[
-                  cmd_id], protocol=protocol.name, orig_cmd_id=packet.cmd_id)
-        packet.cmd_id = cmd_id  # rewrite
-        protocol.receive_packet(packet)
+        except Exception, e:
+            log.error('failed to handle packet', error=e)
+            self.stop()
 
     def send(self, data):
         if not data:
@@ -280,7 +287,7 @@ class Peer(gevent.Greenlet):
     def stop(self):
         if not self.is_stopped:
             self.is_stopped = True
-            log.debug('stopped', peer=self)
+            log.debug('peer stopped', peer=self)
             for p in self.protocols.values():
                 p.stop()
             self.peermanager.peers.remove(self)
