@@ -512,6 +512,9 @@ class DiscoveryProtocol(kademlia.WireInterface):
         self.kademlia.recv_neighbours(remote, neighbours)
 
 
+DEVP2P_UPNP_IDENTIFIER = 'devp2p discovery'
+
+
 class NodeDiscovery(BaseService, DiscoveryProtocolTransport):
 
     """
@@ -584,9 +587,15 @@ class NodeDiscovery(BaseService, DiscoveryProtocolTransport):
             log.debug('external ip address %s:', externalipaddress)
             log.debug('%s %s', u.statusinfo(), u.connectiontype())
             log.debug('trying to redirect %s port %u UDP => %s port %u UDP' % (externalipaddress, port, u.lanaddr, port))
-            b = u.addportmapping(port, 'UDP', u.lanaddr, port, 'UPnP IGD port %u' % port, '')
+            # find a free port for the redirection
+            eport = port
+            r = u.getspecificportmapping(eport, 'UDP')
+            while r != None and eport < 65536:
+                eport = eport + 1
+                r = u.getspecificportmapping(eport, 'UDP')
+            b = u.addportmapping(eport, 'UDP', u.lanaddr, port, DEVP2P_UPNP_IDENTIFIER, '')
             if b:
-                log.info('Success. Now waiting for UDP request on %s:%u' % (externalipaddress ,port))
+                log.info('Success. Now waiting for UDP request on %s:%u' % (externalipaddress,eport))
             else:
                 log.debug('Failed')
         except Exception as e:
