@@ -36,6 +36,8 @@ def add_portmap(port, proto, label=''):
         log.debug('Exception :%s', e)
 
 def remove_portmap(u, port, proto):
+    if not u:
+        return
     try:
         b = u.deleteportmapping(port, proto)
         if b:

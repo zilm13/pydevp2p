@@ -223,7 +223,7 @@ class PeerManager(WiredService):
 
     def stop(self):
         log.info('stopping peermanager')
-        remove_portmap(self.nat_upnp, self.config['p2p']['listen_port'])
+        remove_portmap(self.nat_upnp, self.config['p2p']['listen_port'], 'TCP')
         self.server.stop()
         for peer in self.peers:
             peer.stop()
