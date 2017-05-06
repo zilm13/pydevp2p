@@ -9,6 +9,7 @@ from gevent.socket import create_connection, timeout
 from .service import WiredService
 from .protocol import BaseProtocol
 from .p2p_protocol import P2PProtocol
+from .upnp import add_portmap, remove_portmap
 from devp2p import kademlia
 from .peer import Peer
 from devp2p import crypto
@@ -39,6 +40,7 @@ class PeerManager(WiredService):
     name = 'peermanager'
     required_services = []
     wire_protocol = P2PProtocol
+    nat_upnp = None
     default_config = dict(p2p=dict(bootstrap_nodes=[],
                                    min_peers=5,
                                    max_peers=10,
@@ -148,6 +150,12 @@ class PeerManager(WiredService):
 
     def start(self):
         log.info('starting peermanager')
+        # try upnp nat
+        self.nat_upnp = add_portmap(
+            self.config['p2p']['listen_port'],
+            'TCP',
+            'Ethereum DEVP2P Peermanager'
+        )
         # start a listening server
         log.info('starting listener', addr=self.listen_addr)
         self.server.set_handle(self._on_new_connection)
@@ -215,6 +223,7 @@ class PeerManager(WiredService):
 
     def stop(self):
         log.info('stopping peermanager')
+        remove_portmap(self.nat_upnp, self.config['p2p']['listen_port'])
         self.server.stop()
         for peer in self.peers:
             peer.stop()
