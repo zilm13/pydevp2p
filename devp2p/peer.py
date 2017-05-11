@@ -113,8 +113,8 @@ class Peer(gevent.Greenlet):
 
     def receive_hello(self, proto, version, client_version_string, capabilities,
                       listen_port, remote_pubkey):
-        log.info('received hello', proto=proto, version=version,
-                 client_version=client_version_string, capabilities=capabilities)
+        log.debug('received hello', proto=proto, version=version,
+                  client_version=client_version_string, capabilities=capabilities)
         assert isinstance(remote_pubkey, bytes)
         assert len(remote_pubkey) == 64
         if self.remote_pubkey_available:
