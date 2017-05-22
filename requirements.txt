@@ -1,4 +1,4 @@
-pyelliptic
+pyelliptic==1.5.7
 wheel
 gevent>=1.1.0
 tinyrpc
