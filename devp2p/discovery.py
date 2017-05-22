@@ -593,7 +593,8 @@ class NodeDiscovery(BaseService, DiscoveryProtocolTransport):
     def stop(self):
         log.info('stopping discovery')
         remove_portmap(self.nat_upnp, self.app.config['discovery']['listen_port'], 'UDP')
-        self.server.stop()
+        if self.server:
+            self.server.stop()
         super(NodeDiscovery, self).stop()
 
 if __name__ == '__main__':
