@@ -53,8 +53,10 @@ class Peer(gevent.Greenlet):
         self.safe_to_read = gevent.event.Event()
         self.safe_to_read.set()
 
+        self.greenlets = dict()
+
         # Stop peer if hello not received in self.dumb_remote_timeout seconds
-        gevent.spawn_later(self.dumb_remote_timeout, self.check_if_dumb_remote)
+        self.greenlets['dumb_checker'] = gevent.spawn_later(self.dumb_remote_timeout, self.check_if_dumb_remote)
 
     @property
     def remote_pubkey(self):
@@ -241,8 +243,8 @@ class Peer(gevent.Greenlet):
     def _run_ingress_message(self):
         log.debug('peer starting main loop')
         assert not self.connection.closed, "connection is closed"
-        gevent.spawn(self._run_decoded_packets)
-        gevent.spawn(self._run_egress_message)
+        self.greenlets['decoder'] = gevent.spawn(self._run_decoded_packets)
+        self.greenlets['sender'] = gevent.spawn(self._run_egress_message)
 
         while not self.is_stopped:
             self.safe_to_read.wait()
@@ -286,12 +288,23 @@ class Peer(gevent.Greenlet):
 
     def stop(self):
         if not self.is_stopped:
-            self.is_stopped = True
-            log.debug('peer stopped', peer=self)
-            for p in self.protocols.values():
-                p.stop()
-            self.peermanager.peers.remove(self)
-            self.kill()
+            try:
+                self.is_stopped = True
+                log.debug('peer stopped', peer=self)
+                for g in self.greenlets.values():
+                    try:
+                        g.kill()
+                    except gevent.GreenletExit:
+                        pass
+                self.greenlets = None
+                for p in self.protocols.values():
+                    p.stop()
+                self.protocols = None  # break circular dependency with BaseProtocol
+            except Exception as e:
+                log.debug("failed to gracefully shutdown peer", error=e)
+            finally:
+                self.peermanager.peers.remove(self)
+                self.kill()
 
     def check_if_dumb_remote(self):
         "Stop peer if hello not received"

@@ -20,6 +20,10 @@ from devp2p import slogging
 log = slogging.get_logger('p2p.peermgr')
 
 
+def on_peer_exit(peer):
+    peer.stop()
+
+
 class PeerManager(WiredService):
 
     """
@@ -108,6 +112,7 @@ class PeerManager(WiredService):
     def _start_peer(self, connection, address, remote_pubkey=None):
         # create peer
         peer = Peer(self, connection, remote_pubkey=remote_pubkey)
+        peer.link(on_peer_exit)
         log.debug('created new peer', peer=peer, fno=connection.fileno())
         self.peers.append(peer)
 
