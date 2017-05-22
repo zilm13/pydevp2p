@@ -76,7 +76,11 @@ class P2PProtocol(BaseProtocol):
         assert callable(peer.stop)
         assert callable(peer.receive_hello)
         super(P2PProtocol, self).__init__(peer, service)
+
+        def _on_monitor_exit(mon):
+            peer.stop()
         self.monitor = ConnectionMonitor(self)
+        self.monitor.link(_on_monitor_exit)
 
     def stop(self):
         self.monitor.stop()
