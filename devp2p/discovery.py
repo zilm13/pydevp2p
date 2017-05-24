@@ -2,6 +2,7 @@
 import time
 from socket import AF_INET, AF_INET6
 
+from repoze.lru import LRUCache
 import gevent
 import gevent.socket
 import ipaddress
@@ -214,7 +215,7 @@ class DiscoveryProtocol(kademlia.WireInterface):
         self.transport = transport
         self.privkey = decode_hex(app.config['node']['privkey_hex'])
         self.pubkey = crypto.privtopub(self.privkey)
-        self.nodes = dict()   # nodeid->Node,  fixme should be loaded
+        self.nodes = LRUCache(2048)   # nodeid->Node,  fixme should be loaded
         self.this_node = Node(self.pubkey, self.transport.address)
         self.kademlia = KademliaProtocolAdapter(self.this_node, wire=self)
         this_enode = utils.host_port_pubkey_to_uri(self.app.config['discovery']['listen_host'],
@@ -226,10 +227,10 @@ class DiscoveryProtocol(kademlia.WireInterface):
         "return node or create new, update address if supplied"
         assert isinstance(nodeid, bytes)
         assert len(nodeid) == 512 // 8
-        assert address or (nodeid in self.nodes)
-        if nodeid not in self.nodes:
-            self.nodes[nodeid] = Node(nodeid, address)
-        node = self.nodes[nodeid]
+        assert address or self.nodes.get(nodeid)
+        if not self.nodes.get(nodeid):
+            self.nodes.put(nodeid, Node(nodeid, address))
+        node = self.nodes.get(nodeid)
         if address:
             assert isinstance(address, Address)
             node.address = address
@@ -426,7 +427,7 @@ class DiscoveryProtocol(kademlia.WireInterface):
         # Verify address is valid
         Address.from_endpoint(*payload[0])
         echoed = payload[1]
-        if nodeid in self.nodes:
+        if self.nodes.get(nodeid):
             node = self.get_node(nodeid)
             self.kademlia.recv_pong(node, echoed)
         else:
