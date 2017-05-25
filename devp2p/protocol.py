@@ -182,5 +182,4 @@ class BaseProtocol(gevent.Greenlet):
         log.debug('stopping', proto=self)
         self.is_stopped = True
         self.service.on_wire_protocol_stop(self)
-        self.peer = None  # break circular dependency with Peer
         super(BaseProtocol, self).kill()
