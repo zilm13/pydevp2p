@@ -62,19 +62,10 @@ class Address(object):
             self.udp_port = udp_port
             self.tcp_port = tcp_port
         try:
-            self._ip = ipaddress.ip_address(ip)
-        except ValueError:
-            # Possibly a hostname - try resolving it
-            # We only want v4 or v6 addresses
-            # see https://docs.python.org/2/library/socket.html#socket.getaddrinfo
-            ips = [
-                str(ai[4][0]) if PY3 else unicode(ai[4][0])
-                for ai in gevent.socket.getaddrinfo(ip, None)
-                if ai[0] == AF_INET
-                    or (ai[0] == AF_INET6 and ai[4][3] == 0)
-            ]
-            # Arbitrarily choose the first of the resolved addresses
-            self._ip = ipaddress.ip_address(ips[0])
+            self._ip = ipaddress.ip_address(ip if PY3 else unicode(ip))
+        except ValueError as e:
+            log.debug("failed to parse ip", error=e, ip=ip)
+            raise e
 
     @property
     def ip(self):
@@ -394,7 +385,7 @@ class DiscoveryProtocol(kademlia.WireInterface):
         node = self.get_node(nodeid)
         log.debug('<<< ping', node=node)
         remote_address = Address.from_endpoint(*payload[1])  # from address
-        my_address = Address.from_endpoint(*payload[2])  # my address
+        #my_address = Address.from_endpoint(*payload[2])  # my address
         self.get_node(nodeid).address.update(remote_address)
         self.kademlia.recv_ping(node, echo=mdc)
 
@@ -564,10 +555,14 @@ class NodeDiscovery(BaseService, DiscoveryProtocolTransport):
         self.protocol.receive(address, message)
 
     def _handle_packet(self, message, ip_port):
-        log.debug('handling packet', address=ip_port, size=len(message))
-        assert len(ip_port) == 2
-        address = Address(ip=ip_port[0], udp_port=ip_port[1])
-        self.receive(address, message)
+        try:
+            log.debug('handling packet', address=ip_port, size=len(message))
+            assert len(ip_port) == 2
+            address = Address(ip=ip_port[0], udp_port=ip_port[1])
+            self.receive(address, message)
+        except Exception as e:
+            log.debug("failed to handle discovery packet",
+                      error=e, message=message, ip_port=ip_port)
 
     def start(self):
         log.info('starting discovery')
