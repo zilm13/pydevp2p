@@ -15,9 +15,6 @@ pydevp2p
 .. image:: https://coveralls.io/repos/ethereum/pydevp2p/badge.svg
         :target: https://coveralls.io/r/ethereum/pydevp2p
 
-.. image:: https://pypip.in/d/devp2p/badge.png
-        :target: https://pypi.python.org/pypi/devp2p
-
 .. image:: https://readthedocs.org/projects/pydevp2p/badge/?version=latest
         :target: https://readthedocs.org/projects/pydevp2p/?badge=latest
 
