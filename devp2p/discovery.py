@@ -553,7 +553,7 @@ class NodeDiscovery(BaseService, DiscoveryProtocolTransport):
         try:
             self.server.sendto(message, (address.ip, address.udp_port))
         except gevent.socket.error as e:
-            log.critical('udp write error', errno=e.errno, reason=e.strerror)
+            log.critical('udp write error', address=address, errno=e.errno, reason=e.strerror)
             log.critical('waiting for recovery')
             gevent.sleep(5.)
 

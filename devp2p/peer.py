@@ -44,6 +44,7 @@ class Peer(gevent.Greenlet):
         hello_packet = P2PProtocol.get_hello_packet(self)
         self.mux = MultiplexedSession(privkey, hello_packet, remote_pubkey=remote_pubkey)
         self.remote_pubkey = remote_pubkey
+        self.remote_capabilities = None
 
         # register p2p protocol
         assert issubclass(self.peermanager.wire_protocol, P2PProtocol)
@@ -136,10 +137,10 @@ class Peer(gevent.Greenlet):
 
         self.remote_client_version = client_version_string
         self.remote_pubkey = remote_pubkey
+        self.remote_capabilities = capabilities
 
         # register in common protocols
         log.debug('connecting services', services=self.peermanager.wired_services)
-        remote_services = dict((name, version) for name, version in capabilities)
         remote_services = dict()
         for name, version in capabilities:
             if not name in remote_services:
@@ -204,14 +205,16 @@ class Peer(gevent.Greenlet):
         assert isinstance(packet, Packet)
         try:
             protocol, cmd_id = self.protocol_cmd_id_from_packet(packet)
-            log.debug('recv packet', cmd=protocol.cmd_by_id[cmd_id], protocol=protocol.name, orig_cmd_id=packet.cmd_id)
+            log.debug('recv packet', peer=self, cmd=protocol.cmd_by_id[cmd_id], protocol=protocol.name, orig_cmd_id=packet.cmd_id)
             packet.cmd_id = cmd_id  # rewrite
             protocol.receive_packet(packet)
         except UnknownCommandError as e:
-            log.error('received unknown cmd', error=e, packet=packet)
+            log.error('received unknown cmd', peer=self, error=e, packet=packet)
             return
         except Exception, e:
-            log.error('failed to handle packet', error=e)
+            import traceback
+            traceback.print_exc()
+            log.error('failed to handle packet', peer=self, error=e)
             self.stop()
 
     def send(self, data):
