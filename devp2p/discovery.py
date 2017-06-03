@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import re
 import time
 from socket import AF_INET, AF_INET6
 
@@ -42,6 +43,8 @@ dec_port = utils.idec
 import sys
 PY3 = sys.version_info[0] >= 3
 
+ip_pattern = re.compile("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
+
 
 class Address(object):
 
@@ -62,8 +65,12 @@ class Address(object):
             self.udp_port = udp_port
             self.tcp_port = tcp_port
         try:
-            self._ip = ipaddress.ip_address(ip if PY3 else unicode(ip))
-        except ValueError as e:
+            # `ip` could be in binary or ascii format, independent of
+            # from_binary's truthy. We use ad-hoc regexp to determin format in
+            # python 2.
+            _ip = ip if PY3 or not ip_pattern.match(ip) else unicode(ip)
+            self._ip = ipaddress.ip_address(_ip)
+        except ipaddress.AddressValueError as e:
             log.debug("failed to parse ip", error=e, ip=ip)
             raise e
 
