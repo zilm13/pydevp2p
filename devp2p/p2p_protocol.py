@@ -130,7 +130,7 @@ class P2PProtocol(BaseProtocol):
     @classmethod
     def get_hello_packet(cls, peer):
         "special: we need this packet before the protocol can be initalized"
-        res = dict(version=55,
+        res = dict(version=cls.version,
                    client_version_string=peer.config['client_version_string'],
                    capabilities=peer.capabilities,
                    listen_port=peer.config['p2p']['listen_port'],
