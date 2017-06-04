@@ -299,7 +299,7 @@ class DiscoveryProtocol(kademlia.WireInterface):
         """
         mdc = message[:32]
         if mdc != crypto.sha3(message[32:]):
-            log.warn('packet with wrong mcd')
+            log.debug('packet with wrong mcd')
             raise WrongMAC()
         signature = message[32:97]
         assert len(signature) == 65
@@ -553,9 +553,9 @@ class NodeDiscovery(BaseService, DiscoveryProtocolTransport):
         try:
             self.server.sendto(message, (address.ip, address.udp_port))
         except gevent.socket.error as e:
-            log.critical('udp write error', address=address, errno=e.errno, reason=e.strerror)
-            log.critical('waiting for recovery')
-            gevent.sleep(5.)
+            log.debug('udp write error', address=address, errno=e.errno, reason=e.strerror)
+            log.debug('waiting for recovery')
+            gevent.sleep(0.5)
 
     def receive(self, address, message):
         assert isinstance(address, Address)

@@ -209,12 +209,9 @@ class Peer(gevent.Greenlet):
             packet.cmd_id = cmd_id  # rewrite
             protocol.receive_packet(packet)
         except UnknownCommandError as e:
-            log.error('received unknown cmd', peer=self, error=e, packet=packet)
-            return
+            log.debug('received unknown cmd', peer=self, error=e, packet=packet)
         except Exception, e:
-            import traceback
-            traceback.print_exc()
-            log.error('failed to handle packet', peer=self, error=e)
+            log.debug('failed to handle packet', peer=self, error=e)
             self.stop()
 
     def send(self, data):
