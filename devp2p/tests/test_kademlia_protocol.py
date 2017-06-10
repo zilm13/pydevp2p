@@ -135,7 +135,6 @@ def test_setup():
 
 
 @pytest.mark.timeout(5)
-@pytest.mark.xfail
 def test_find_node_timeout():
     proto = get_wired_protocol()
     other = routing_table()
@@ -186,7 +185,6 @@ def test_eviction():
 
 
 @pytest.mark.timeout(5)
-@pytest.mark.xfail
 def test_eviction_timeout():
     proto = get_wired_protocol()
     proto.routing = routing_table(1000)
@@ -277,7 +275,6 @@ def test_eviction_node_active():
 
 
 @pytest.mark.timeout(5)
-@pytest.mark.xfail
 def test_eviction_node_inactive():
     """
     active nodes (replying in time) should not be evicted

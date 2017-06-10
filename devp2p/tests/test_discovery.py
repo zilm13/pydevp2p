@@ -4,6 +4,7 @@ from devp2p import crypto
 from devp2p.app import BaseApp
 from rlp.utils import decode_hex, encode_hex
 from devp2p.utils import remove_chars
+import pytest
 import gevent
 import random
 
@@ -233,13 +234,26 @@ def test_ping_pong_udp():
     assert bob_node in alice_discovery.protocol.kademlia.routing
 
 
-def test_bootstrap_udp():
+# must use yield_fixture rather than fixture prior to pytest 2.10
+@pytest.yield_fixture
+def kademlia_timeout():
+    """
+    Rolls back kademlia timeout after the test.
+    """
+    # backup the previous value
+    k_request_timeout = kademlia.k_request_timeout
+    # return kademlia
+    yield kademlia
+    # restore the previous value
+    kademlia.k_request_timeout = k_request_timeout
+
+def test_bootstrap_udp(kademlia_timeout):
     """
     startup num_apps udp server and node applications
     """
 
     # set timeout to something more tolerant
-    kademlia.k_request_timeout = 10000.
+    kademlia_timeout.k_request_timeout = 10000.
 
     num_apps = 6
     apps = []
