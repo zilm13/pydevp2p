@@ -17,7 +17,7 @@ def test_address():
 
     ipv4 = '127.98.19.21'
     ipv6 = u'5aef:2b::8'
-    hostname = 'localhost'
+    # hostname = 'localhost'
     port = 1
 
     a4 = Address(ipv4, port)
@@ -44,8 +44,10 @@ def test_address():
     assert len(b_a4[0]) == 4
     assert isinstance(b_a6[1], bytes)
 
-    host_a = Address(hostname, port)
-    assert host_a.ip in ("127.0.0.1", "::1")
+    # temporarily disabled hostname test, see commit discussion:
+    # https://github.com/ethereum/pydevp2p/commit/8e1f2b2ef28ecba22bf27eac346bfa7007eaf0fe
+    # host_a = Address(hostname, port)
+    # assert host_a.ip in ("127.0.0.1", "::1")
 
 #############################
 
