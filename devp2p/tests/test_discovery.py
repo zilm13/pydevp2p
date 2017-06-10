@@ -16,7 +16,7 @@ def test_address():
     Address = discovery.Address
 
     ipv4 = '127.98.19.21'
-    ipv6 = '5aef:2b::8'
+    ipv6 = u'5aef:2b::8'
     hostname = 'localhost'
     port = 1
 
