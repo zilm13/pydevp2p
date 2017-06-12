@@ -162,7 +162,7 @@ class TestFullApp:
     def test_inc_counter_app(self, num_nodes):
         class TestDriver(object):
             NUM_NODES = num_nodes
-            COUNTER_LIMIT = 1024
+            COUNTER_LIMIT = 256
             NODES_PASSED_SETUP = set()
             NODES_PASSED_INC_COUNTER = set()
 
