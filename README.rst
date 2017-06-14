@@ -32,8 +32,8 @@ RLPx provides a general-purpose transport and interface for applications to comm
 
 RLPx underpins the DEVp2p interface:
 
-* https://github.com/ethereum/wiki/wiki/ÐΞVp2p-Wire-Protocol
-* https://github.com/ethereum/wiki/wiki/libp2p-Whitepaper
+* `https://github.com/ethereum/wiki/wiki/ÐΞVp2p-Wire-Protocol<https://github.com/ethereum/wiki/wiki/ÐΞVp2p-Wire-Protocol>`_
+* `https://github.com/ethereum/wiki/wiki/libp2p-Whitepaper<https://github.com/ethereum/wiki/wiki/libp2p-Whitepaper>`_
 
 Full spec:
 
