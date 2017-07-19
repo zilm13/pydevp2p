@@ -8,7 +8,7 @@ import gevent
 import gevent.socket
 import ipaddress
 import rlp
-from rlp.utils import decode_hex, is_integer, str_to_bytes, safe_ord
+from rlp.utils import decode_hex, is_integer, str_to_bytes, bytes_to_str, safe_ord
 from gevent.server import DatagramServer
 
 from devp2p import slogging
@@ -43,7 +43,7 @@ dec_port = utils.idec
 import sys
 PY3 = sys.version_info[0] >= 3
 
-ip_pattern = re.compile("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
+ip_pattern = re.compile(b"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|([0-9a-f]{0,4}:)*([0-9a-f]{0,4})?$")
 
 
 class Address(object):
@@ -66,9 +66,9 @@ class Address(object):
             self.tcp_port = tcp_port
         try:
             # `ip` could be in binary or ascii format, independent of
-            # from_binary's truthy. We use ad-hoc regexp to determin format in
-            # python 2.
-            _ip = ip if PY3 or not ip_pattern.match(ip) else unicode(ip)
+            # from_binary's truthy. We use ad-hoc regexp to determine format
+            _ip = str_to_bytes(ip)
+            _ip = (bytes_to_str(ip) if PY3 else unicode(ip)) if ip_pattern.match(_ip) else _ip
             self._ip = ipaddress.ip_address(_ip)
         except ipaddress.AddressValueError as e:
             log.debug("failed to parse ip", error=e, ip=ip)
