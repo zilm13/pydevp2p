@@ -4,13 +4,25 @@ from devp2p import slogging
 
 log = slogging.get_logger('p2p.upnp')
 
-def add_portmap(port, proto, label=''):
+_upnp = None
+
+def _init_upnp():
+    global _upnp
+    if _upnp:
+        return _upnp
     u = miniupnpc.UPnP()
     u.discoverdelay = 200
     try:
         log.debug('Discovering... delay=%ums' % u.discoverdelay)
         ndevices = u.discover()
         log.debug('%u device(s) detected', ndevices)
+        _upnp = u
+    except Exception as e:
+        log.debug('Exception :%s', e)
+
+def add_portmap(port, proto, label=''):
+    u = _init_upnp()
+    try:
         # select an igd
         u.selectigd()
         # display information about the IGD and the internet connection
