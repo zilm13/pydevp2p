@@ -11,7 +11,7 @@ import devp2p.p2p_protocol
 import time
 import gevent
 import copy
-from rlp.utils import encode_hex, decode_hex
+from rlp.utils import encode_hex, decode_hex, str_to_bytes
 
 
 def get_connected_apps():
@@ -120,7 +120,7 @@ def test_offset_dispatch():
         class MockProtocol(devp2p.protocol.BaseProtocol):
             protocol_id = n
             max_cmd_id = size
-            name = b'mock%d' % n
+            name = str_to_bytes('mock%d' % n)
             version = 1
             def __init__(self, *args, **kwargs):
                 super(MockProtocol, self).__init__(*args, **kwargs)
