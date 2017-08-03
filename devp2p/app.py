@@ -57,7 +57,6 @@ def main():
     import signal
     import gevent
     from .peermanager import PeerManager
-    from .jsonrpc import JSONRPCServer
     from .discovery import NodeDiscovery
     from devp2p import slogging
     log = slogging.get_logger('app')
@@ -99,7 +98,6 @@ node:
     # register services
     NodeDiscovery.register_with_app(app)
     PeerManager.register_with_app(app)
-    #  JSONRPCServer.register_with_app(app)
 
     # start app
     app.start()
