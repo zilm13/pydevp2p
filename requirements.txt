@@ -5,7 +5,7 @@ bitcoin
 ipaddress
 coverage
 tox
-secp256k1==0.13.2
+coincurve>=5.0.1
 pycryptodome>=3.3.1
 rlp>=0.5.1,<0.6.0
 miniupnpc
