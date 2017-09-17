@@ -1,3 +1,4 @@
+from __future__ import print_function
 import struct
 import rlp
 from rlp.utils import encode_hex, decode_hex, str_to_bytes, bytes_to_str
@@ -26,9 +27,10 @@ node_uri_scheme = 'enode://'
 
 def host_port_pubkey_from_uri(uri):
     b_node_uri_scheme = str_to_bytes(node_uri_scheme)
-    assert uri.startswith(b_node_uri_scheme) and \
-        b'@' in uri and b':' in uri, uri
-    pubkey_hex, ip_port = uri[len(b_node_uri_scheme):].split(b'@')
+    b_uri = str_to_bytes(uri)
+    assert b_uri.startswith(b_node_uri_scheme) and \
+        b'@' in b_uri and b':' in b_uri, b_uri
+    pubkey_hex, ip_port = b_uri[len(b_node_uri_scheme):].split(b'@')
     assert len(pubkey_hex) == 2 * 512 // 8
     ip, port = ip_port.split(b':')
     return ip, port, decode_hex(pubkey_hex)
