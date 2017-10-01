@@ -144,13 +144,15 @@ class Peer(gevent.Greenlet):
         log.debug('connecting services', services=self.peermanager.wired_services)
         remote_services = dict()
         for name, version in capabilities:
+            if isinstance(name, bytes) and not isinstance(name, str):
+                name = name.decode('utf-8')
             if not name in remote_services:
                 remote_services[name] = []
             remote_services[name].append(version)
         for service in sorted(self.peermanager.wired_services, key=operator.attrgetter('name')):
             proto = service.wire_protocol
             assert isinstance(service, WiredService)
-            assert isinstance(proto.name, bytes)
+            assert isinstance(proto.name, (bytes, str))
             if proto.name in remote_services:
                 if proto.version in remote_services[proto.name]:
                     if service != self.peermanager:  # p2p protocol already registered
@@ -264,7 +266,7 @@ class Peer(gevent.Greenlet):
             except gevent.socket.error as e:
                 log.debug('read error', errno=e.errno, reason=e.strerror, peer=self)
                 self.report_error('network error %s' % e.strerror)
-                if e.errno in(errno.ENETDOWN, errno.ECONNRESET, errno.ETIMEDOUT, 
+                if e.errno in(errno.ENETDOWN, errno.ECONNRESET, errno.ETIMEDOUT,
                               errno.EHOSTUNREACH, errno.ECONNABORTED):
                     # (Network down, Connection reset by peer, timeout, no route to host,
                     # Software caused connection abort (windows weirdness))
