@@ -19,6 +19,9 @@ def _init_upnp():
         _upnp = u
     except Exception as e:
         log.debug('Exception :%s', e)
+    finally:
+        return _upnp
+
 
 def add_portmap(port, proto, label=''):
     u = _init_upnp()
