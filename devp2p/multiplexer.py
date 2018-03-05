@@ -497,8 +497,10 @@ class Multiplexer(object):
                 raise MultiplexerError('received chunked_0 frame for existing buffer %d of protocol %d' %
                                        (sequence_id, protocol_id))
             if len(body) > packet.total_payload_size - len(packet.payload):
-                raise MultiplexerError('too much data for chunked buffer %d of protocol %d' %
-                                       (sequence_id, protocol_id))
+                err = 'too much data for chunked buffer %d of protocol %d' % (sequence_id, protocol_id)
+                err += ' len(body): %d, packet.total_payload_size: %d, ' \
+                       'len(packet.payload): %d' % (len(body), packet.total_payload_size, len(packet.payload))
+                raise MultiplexerError(err)
             # all good
             packet.payload += body
             if packet.total_payload_size == len(packet.payload):
